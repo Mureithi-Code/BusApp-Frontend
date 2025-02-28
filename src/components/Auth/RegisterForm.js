@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authApi from "../../api/authApi";
 import "./Auth.css";
+import { Link } from 'react-router-dom';
 
 function RegisterForm() {
     const [formData, setFormData] = useState({
@@ -67,7 +68,7 @@ function RegisterForm() {
                 <button type="submit">Register</button>
             </form>
             {message && <p className="auth-message">{message}</p>}
-            <p>Already have an account? <a href="/login">Login</a></p>
+            <p>Already have an account? <Link to="/login">Login</Link></p>
         </div>
     );
 }
