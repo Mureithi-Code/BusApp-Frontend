@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authApi from "../../api/authApi";
-import "./Auth.css";  
+import "./Auth.css";
 
 function LoginForm() {
     const [credentials, setCredentials] = useState({ email: "", password: "" });
@@ -21,6 +21,11 @@ function LoginForm() {
             localStorage.setItem("token", response.token);
             localStorage.setItem("role", response.role);
 
+            if (response.role === "Driver") {
+                localStorage.setItem("driver_id", response.driver_id);   // Save driver_id
+                localStorage.setItem("driver_name", response.name);    // Optional - save driver name
+            }
+
             switch (response.role) {
                 case "Admin":
                     navigate("/admin-dashboard");
@@ -35,7 +40,7 @@ function LoginForm() {
                     setMessage("Unknown role, please contact support.");
             }
         } catch (error) {
-            setMessage(error.response?.data?.error || "Login failed.");
+            setMessage(error.message || "Login failed.");
         }
     };
 

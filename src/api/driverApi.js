@@ -1,43 +1,92 @@
 import axios from 'axios';
 
-const API_BASE_URL = "https://busbookingtest.onrender.com";
+const API_BASE_URL = 'http://127.0.0.1:5000';
+
+const getAuthHeaders = () => ({
+    Authorization: `Bearer ${localStorage.getItem('token')}`,
+    'Content-Type': 'application/json',
+});
+
+const handleApiError = (error) => {
+    if (error.response?.status === 401) {
+        localStorage.clear();
+        window.location.href = "/login";
+        throw new Error('Session expired. Please log in again.');
+    }
+    throw error;
+};
 
 const driverApi = {
-    getBuses: async (driverId) => {
-        const response = await axios.get(`${API_BASE_URL}/driver/buses/${driverId}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
-        return response.data;
+    getDriverRoutes: async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/driver/routes`, { headers: getAuthHeaders() });
+            return response.data.routes;  // Extracting 'routes' array here
+        } catch (error) {
+            handleApiError(error);
+        }
     },
-    addBus: async (busData) => {
-        const response = await axios.post(`${API_BASE_URL}/driver/add_bus`, busData, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
-        return response.data;
+
+    getDriverBuses: async () => {
+        try {
+            const response = await axios.get(`${API_BASE_URL}/driver/buses`, { headers: getAuthHeaders() });
+            return response.data.buses;  // Extracting 'buses' array here
+        } catch (error) {
+            handleApiError(error);
+        }
     },
-    removeBus: async (busId) => {
-        const response = await axios.delete(`${API_BASE_URL}/driver/remove_bus/${busId}`, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
-        return response.data;
+
+    createRoute: async (data) => {
+        try {
+            const response = await axios.post(`${API_BASE_URL}/driver/routes`, data, { headers: getAuthHeaders() });
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
     },
-    assignRoute: async (data) => {
-        const response = await axios.put(`${API_BASE_URL}/driver/pick_route`, data, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
-        return response.data;
+
+    addBus: async (data) => {
+        try {
+            const response = await axios.post(`${API_BASE_URL}/driver/buses`, data, { headers: getAuthHeaders() });
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
     },
-    assignCost: async (busId, data) => {
-        const response = await axios.put(`${API_BASE_URL}/driver/assign_cost/${busId}`, data, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
-        return response.data;
+
+    assignRoute: async (busId, routeId) => {
+        try {
+            const response = await axios.put(`${API_BASE_URL}/driver/buses/${busId}/assign-route`, { route_id: routeId }, { headers: getAuthHeaders() });
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
     },
-    updateBus: async (busId, data) => {
-        const response = await axios.put(`${API_BASE_URL}/driver/update_bus/${busId}`, data, {
-            headers: { Authorization: `Bearer ${localStorage.getItem("token")}` }
-        });
-        return response.data;
+
+    setDepartureTime: async (busId, time) => {
+        try {
+            const response = await axios.put(`${API_BASE_URL}/driver/buses/${busId}/departure-time`, { departure_time: time }, { headers: getAuthHeaders() });
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
+    },
+
+    setSeatPrice: async (busId, price) => {
+        try {
+            const response = await axios.put(`${API_BASE_URL}/driver/buses/${busId}/seat-price`, { price }, { headers: getAuthHeaders() });
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
+    },
+
+    deleteBus: async (busId) => {
+        try {
+            const response = await axios.delete(`${API_BASE_URL}/driver/buses/${busId}`, { headers: getAuthHeaders() });
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
     },
 };
 
