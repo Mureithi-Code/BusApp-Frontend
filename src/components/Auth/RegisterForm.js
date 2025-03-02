@@ -9,7 +9,7 @@ function RegisterForm() {
         name: "",
         email: "",
         password: "",
-        role: "Customer"  // Default role (you can change it as needed)
+        role: "Customer"  // Default role 
     });
 
     const [message, setMessage] = useState("");

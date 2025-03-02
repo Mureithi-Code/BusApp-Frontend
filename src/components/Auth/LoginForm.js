@@ -23,7 +23,7 @@ function LoginForm() {
 
             if (response.role === "Driver") {
                 localStorage.setItem("driver_id", response.driver_id);   // Save driver_id
-                localStorage.setItem("driver_name", response.name);    // Optional - save driver name
+                localStorage.setItem("driver_name", response.name);    
             }
 
             switch (response.role) {
