@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import driverApi from "../../api/driverApi";
 import { useNavigate } from "react-router-dom";
-import "./DriverDashboard.css"; // Optional
+import "./DriverDashboard.css";
 
 function DriverDashboard() {
     const [routes, setRoutes] = useState([]);
@@ -13,12 +13,12 @@ function DriverDashboard() {
     const fetchDashboardData = async () => {
         try {
             const fetchedRoutes = await driverApi.getDriverRoutes();
-            setRoutes(fetchedRoutes);  // This now works because driverApi returns array directly
+            setRoutes(fetchedRoutes);  // driverApi now returns array directly
 
             const fetchedBuses = await driverApi.getDriverBuses();
             setBuses(fetchedBuses);
         } catch (err) {
-            setError(err.message);
+            setError(err?.message || "Failed to fetch data");
         }
     };
 
@@ -51,9 +51,15 @@ function DriverDashboard() {
         <div className="driver-dashboard">
             <header>
                 <h2>Driver Dashboard</h2>
-                <nav>
+                <nav className="navbar">
                     <button onClick={() => navigate("/driver/add-route")}>Add Route</button>
                     <button onClick={() => navigate("/driver/add-bus")}>Add Bus</button>
+                    <button onClick={() => navigate("/driver/assign-bus-route")}>Assign Bus to Route</button>
+                    <button onClick={() => navigate("/driver/set-departure-time")}>Set Departure Time</button>
+                    <button onClick={() => navigate("/driver/set-ticket-price")}>Set Ticket Price</button>
+                    <button onClick={() => navigate("/driver/view-bus-seats")}>View Bus Seats</button>
+                    <button onClick={() => navigate("/driver/view-routes")}>View Routes</button>
+                    <button onClick={() => navigate("/driver/view-buses")}>View Buses</button>
                     <button onClick={handleLogout}>Logout</button>
                 </nav>
             </header>

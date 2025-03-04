@@ -1,51 +1,34 @@
-import axios from 'axios';
-
-const API_BASE_URL = 'http://127.0.0.1:5000';
-
-const getAuthHeaders = () => ({
-    Authorization: `Bearer ${localStorage.getItem('token')}`
-});
+// src/api/customerApi.js
+import apiClient from './apiClient';
 
 const customerApi = {
     getAllBuses: async () => {
-        const response = await axios.get(`${API_BASE_URL}/customer/available_buses`, {
-            headers: getAuthHeaders()
-        });
+        const response = await apiClient.get('/customer/available_buses');
         return response.data;
     },
 
     getMyBookings: async (customerId) => {
-        const response = await axios.get(`${API_BASE_URL}/customer/my_bookings/${customerId}`, {
-            headers: getAuthHeaders()
-        });
+        const response = await apiClient.get(`/customer/my_bookings/${customerId}`);
         return response.data;
     },
 
     bookSeat: async (bookingData) => {
-        const response = await axios.post(`${API_BASE_URL}/customer/book_seat`, bookingData, {
-            headers: getAuthHeaders()
-        });
+        const response = await apiClient.post('/customer/book_seat', bookingData);
         return response.data;
     },
 
     cancelBooking: async (bookingId) => {
-        const response = await axios.delete(`${API_BASE_URL}/customer/cancel_booking/${bookingId}`, {
-            headers: getAuthHeaders()
-        });
+        const response = await apiClient.delete(`/customer/cancel_booking/${bookingId}`);
         return response.data;
     },
 
     getAvailableSeats: async (busId) => {
-        const response = await axios.get(`${API_BASE_URL}/customer/view_available_seats/${busId}`, {
-            headers: getAuthHeaders()
-        });
+        const response = await apiClient.get(`/customer/view_available_seats/${busId}`);
         return response.data;
     },
 
     sendMessage: async (messageData) => {
-        const response = await axios.post(`${API_BASE_URL}/customer/send_message`, messageData, {
-            headers: getAuthHeaders()
-        });
+        const response = await apiClient.post('/customer/send_message', messageData);
         return response.data;
     }
 };
