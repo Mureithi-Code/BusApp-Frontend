@@ -1,41 +1,59 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import driverApi from "../../api/driverApi";
 import { useNavigate } from "react-router-dom";
 import "./DriverPages.css";
 
-function SetTicketPricePage() {
-    const [busId, setBusId] = useState("");
+const SetTicketPricePage = () => {
+    const [buses, setBuses] = useState([]);
+    const [selectedBusId, setSelectedBusId] = useState("");
     const [ticketPrice, setTicketPrice] = useState("");
     const [error, setError] = useState("");
     const navigate = useNavigate();
 
-    const handleSetPrice = async (e) => {
+    useEffect(() => {
+        const fetchBuses = async () => {
+            try {
+                const buses = await driverApi.getDriverBuses();
+                setBuses(buses);
+                if (buses.length > 0) setSelectedBusId(buses[0].id);
+            } catch (err) {
+                setError("Failed to fetch buses: " + err.message);
+            }
+        };
+        fetchBuses();
+    }, []);
+
+    const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await driverApi.setTicketPrice(busId, { ticket_price: parseFloat(ticketPrice) });
+            await driverApi.setTicketPrice(selectedBusId, parseFloat(ticketPrice));
             alert("Ticket price updated successfully!");
             navigate("/driver-dashboard");
         } catch (err) {
-            setError(err.message);
+            setError("Failed to update ticket price: " + err.message);
         }
     };
 
     return (
-        <div className="page-container">
+        <div className="driver-page">
             <h2>Set Ticket Price</h2>
             {error && <p className="error">{error}</p>}
-            <form onSubmit={handleSetPrice}>
-                <label>Bus ID:</label>
-                <input type="text" value={busId} onChange={(e) => setBusId(e.target.value)} required />
-
+            <form onSubmit={handleSubmit}>
+                <label>Bus:</label>
+                <select value={selectedBusId} onChange={(e) => setSelectedBusId(e.target.value)}>
+                    {buses.map(bus => (
+                        <option key={bus.id} value={bus.id}>
+                            {bus.bus_number}
+                        </option>
+                    ))}
+                </select>
                 <label>Ticket Price:</label>
                 <input type="number" value={ticketPrice} onChange={(e) => setTicketPrice(e.target.value)} required />
 
-                <button type="submit">Set Ticket Price</button>
+                <button type="submit">Update Price</button>
             </form>
-            <button onClick={() => navigate("/driver-dashboard")} className="back-button">Back to Dashboard</button>
         </div>
     );
-}
+};
 
 export default SetTicketPricePage;

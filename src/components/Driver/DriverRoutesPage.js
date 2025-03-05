@@ -14,7 +14,7 @@ function DriverRoutesPage() {
                 const data = await driverApi.getDriverRoutes();
                 setRoutes(data);
             } catch (err) {
-                setError(err.message);
+                setError("Failed to fetch routes: " + err.message);
             }
         };
         fetchRoutes();
@@ -29,8 +29,8 @@ function DriverRoutesPage() {
                 <p>No routes available.</p>
             ) : (
                 <ul className="item-list">
-                    {routes.map((route) => (
-                        <li key={route.route_id}>
+                    {routes.map(route => (
+                        <li key={route.id}>
                             <strong>{route.start_location} ➡ {route.destination}</strong><br />
                             Departure Time: {route.departure_time || "Not Set"}
                         </li>

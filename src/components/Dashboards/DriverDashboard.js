@@ -13,10 +13,10 @@ function DriverDashboard() {
     const fetchDashboardData = async () => {
         try {
             const fetchedRoutes = await driverApi.getDriverRoutes();
-            setRoutes(fetchedRoutes);  // driverApi now returns array directly
+            setRoutes(fetchedRoutes ?? []);  // Safe fallback in case of API issues
 
             const fetchedBuses = await driverApi.getDriverBuses();
-            setBuses(fetchedBuses);
+            setBuses(fetchedBuses ?? []);
         } catch (err) {
             setError(err?.message || "Failed to fetch data");
         }
@@ -39,7 +39,7 @@ function DriverDashboard() {
         if (window.confirm("Are you sure you want to delete this bus?")) {
             try {
                 await driverApi.deleteBus(busId);
-                setBuses(buses.filter(bus => bus.bus_id !== busId));
+                setBuses(buses.filter(bus => bus.id !== busId));
                 setSelectedBus(null);
             } catch (err) {
                 setError(err.message);
@@ -67,6 +67,7 @@ function DriverDashboard() {
             {error && <p className="error">{error}</p>}
 
             <div className="dashboard-content">
+                {/* Routes Section */}
                 <div className="section">
                     <h3>Your Routes</h3>
                     {routes.length === 0 ? (
@@ -74,14 +75,15 @@ function DriverDashboard() {
                     ) : (
                         <ul>
                             {routes.map(route => (
-                                <li key={route.route_id}>
-                                    {route.start_location} ➡ {route.destination}
+                                <li key={route.id}>
+                                    {route.start_location} ➡ {route.destination} ({route.departure_time || "No Departure Time Set"})
                                 </li>
                             ))}
                         </ul>
                     )}
                 </div>
 
+                {/* Buses Section */}
                 <div className="section">
                     <h3>Your Buses</h3>
                     {buses.length === 0 ? (
@@ -89,22 +91,27 @@ function DriverDashboard() {
                     ) : (
                         <ul>
                             {buses.map(bus => (
-                                <li key={bus.bus_id} onClick={() => handleBusClick(bus)}>
-                                    Bus {bus.bus_number} - {bus.bus_name}
+                                <li key={bus.id} onClick={() => handleBusClick(bus)}>
+                                    Bus {bus.bus_number} - {bus.start_location || "Unassigned"}
                                 </li>
                             ))}
                         </ul>
                     )}
                 </div>
 
+                {/* Selected Bus Details */}
                 {selectedBus && (
                     <div className="section">
                         <h3>Bus Details - {selectedBus.bus_number}</h3>
-                        <p><strong>Name:</strong> {selectedBus.bus_name}</p>
-                        <p><strong>Seats:</strong> {selectedBus.total_seats}</p>
-                        <p><strong>Price per Seat:</strong> {selectedBus.ticket_price}</p>
+                        <p><strong>Capacity:</strong> {selectedBus.capacity}</p>
+                        <p><strong>Price per Seat:</strong> ${selectedBus.ticket_price}</p>
                         <p><strong>Departure Time:</strong> {selectedBus.departure_time || "Not Set"}</p>
-                        <button onClick={() => handleDeleteBus(selectedBus.bus_id)}>Delete Bus</button>
+                        {selectedBus.route_id ? (
+                            <p><strong>Route:</strong> {selectedBus.start_location} ➡ {selectedBus.destination}</p>
+                        ) : (
+                            <p>No Route Assigned</p>
+                        )}
+                        <button onClick={() => handleDeleteBus(selectedBus.id)}>Delete Bus</button>
                     </div>
                 )}
             </div>

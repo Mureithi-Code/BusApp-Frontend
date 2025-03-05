@@ -14,7 +14,7 @@ function DriverBusesPage() {
                 const data = await driverApi.getDriverBuses();
                 setBuses(data);
             } catch (err) {
-                setError(err.message);
+                setError("Failed to fetch buses: " + err.message);
             }
         };
         fetchBuses();
@@ -29,12 +29,12 @@ function DriverBusesPage() {
                 <p>No buses available.</p>
             ) : (
                 <ul className="item-list">
-                    {buses.map((bus) => (
-                        <li key={bus.bus_id}>
+                    {buses.map(bus => (
+                        <li key={bus.id}>
                             <strong>{bus.bus_number}</strong> - {bus.capacity} seats<br />
                             Ticket Price: ${bus.ticket_price || "Not Set"}<br />
                             Departure Time: {bus.departure_time || "Not Set"}<br />
-                            {bus.route_id ? `Assigned to Route ID: ${bus.route_id}` : "Not Assigned to Route"}
+                            {bus.route_id ? `Route: ${bus.start_location} to ${bus.destination}` : "No Route Assigned"}
                         </li>
                     ))}
                 </ul>

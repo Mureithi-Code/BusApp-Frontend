@@ -5,18 +5,17 @@ const driverApi = {
     // Fetch all routes for the logged-in driver
     getDriverRoutes: async () => {
         const response = await apiClient.get('/driver/routes');
-        return response.data.routes;  // Keep this if your backend returns { routes: [...] }
+        return response.data.data.routes;  // Updated for new structure
     },
 
     // Fetch all buses for the logged-in driver
     getDriverBuses: async () => {
         const response = await apiClient.get('/driver/buses');
 
-        // Transform the buses to include route details (if present)
-        const enrichedBuses = response.data.buses.map(bus => ({
+        const enrichedBuses = response.data.data.buses.map(bus => ({  // Updated
             ...bus,
-            start_location: bus.start_location || "Unknown",  // default if not provided
-            destination: bus.destination || "Unknown",        // default if not provided
+            start_location: bus.start_location || "Unknown",
+            destination: bus.destination || "Unknown",
         }));
 
         return enrichedBuses;
@@ -36,7 +35,7 @@ const driverApi = {
 
     // Assign a bus to a route
     assignRoute: async (busId, routeId) => {
-        const response = await apiClient.put(`/driver/bus/${busId}/assign_bus_to_route`, { route_id: routeId });
+        const response = await apiClient.put(`/driver/bus/${busId}/assign_route`, { route_id: routeId });
         return response.data;
     },
 
@@ -47,7 +46,7 @@ const driverApi = {
     },
 
     // Set ticket price for a bus
-    setSeatPrice: async (busId, ticketPrice) => {
+    setTicketPrice: async (busId, ticketPrice) => {
         const response = await apiClient.put(`/driver/bus/${busId}/set_ticket_price`, { ticket_price: ticketPrice });
         return response.data;
     },
@@ -55,7 +54,7 @@ const driverApi = {
     // Get seat information for a specific bus
     getBusSeats: async (busId) => {
         const response = await apiClient.get(`/driver/bus/${busId}/seats`);
-        return response.data;
+        return response.data.data;  // Updated for new structure
     },
 
     // Delete a bus
