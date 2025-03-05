@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import customerApi from "../../api/customerApi";
+import customerApi from '../../api/customerApi';
 import './CustomerDashboard.css';
 
 const CustomerDashboard = () => {
@@ -8,44 +8,39 @@ const CustomerDashboard = () => {
     const [selectedBus, setSelectedBus] = useState(null);
     const [selectedSeat, setSelectedSeat] = useState('');
     const [feedback, setFeedback] = useState('');
-    const [message, setMessage] = useState('');
-    const [availableSeats, setAvailableSeats] = useState(0);
+    const [availableSeats, setAvailableSeats] = useState([]);
+    const [routes, setRoutes] = useState([]);
 
     const customerId = localStorage.getItem('user_id');
 
-    // Fetch buses
-    const fetchBuses = async () => {
+    const fetchDashboardData = async () => {
         try {
-            const data = await customerApi.getAllBuses();
-            setBuses(data);
+            const fetchedBuses = await customerApi.getAllBuses();
+            const fetchedRoutes = await customerApi.getAllRoutes();
+            const fetchedBookings = await customerApi.getMyBookings(customerId);
+
+            // Filter buses — only keep those assigned to routes
+            const busesWithRoutes = fetchedBuses.filter(bus => bus.route_id);
+
+            setBuses(busesWithRoutes);
+            setBookings(fetchedBookings);
+            setRoutes(fetchedRoutes);
         } catch (error) {
-            setFeedback('Failed to fetch buses.');
+            setFeedback(error.message || "Failed to fetch dashboard data.");
         }
     };
 
-    // Fetch customer's bookings
-    const fetchBookings = async () => {
+    const fetchAvailableSeats = async (busId) => {
         try {
-            const data = await customerApi.getMyBookings(customerId);
-            setBookings(data);
+            const response = await customerApi.getAvailableSeats(busId);
+            setAvailableSeats(response.seats);
         } catch (error) {
-            setFeedback('Failed to fetch bookings.');
-        }
-    };
-
-    // Fetch available seats
-    const checkAvailableSeats = async (busId) => {
-        try {
-            const data = await customerApi.getAvailableSeats(busId);
-            setAvailableSeats(data.available_seats);
-        } catch (error) {
-            setAvailableSeats(0);
+            setFeedback(error.message || "Failed to fetch available seats.");
         }
     };
 
     useEffect(() => {
-        fetchBuses();
-        fetchBookings();
+        fetchDashboardData();
     }, []);
 
     const handleBookSeat = async () => {
@@ -58,14 +53,16 @@ const CustomerDashboard = () => {
             const bookingData = {
                 customer_id: parseInt(customerId),
                 bus_id: selectedBus.id,
-                seat_number: parseInt(selectedSeat),
+                seat_number: parseInt(selectedSeat)
             };
+
             const response = await customerApi.bookSeat(bookingData);
             setFeedback(response.message);
-            fetchBookings();
-            checkAvailableSeats(selectedBus.id);
+            setSelectedSeat('');
+            fetchDashboardData();  // Refresh buses and bookings
+            fetchAvailableSeats(selectedBus.id);
         } catch (error) {
-            setFeedback(error.response?.data?.error || 'Failed to book seat.');
+            setFeedback(error.message);
         }
     };
 
@@ -73,29 +70,16 @@ const CustomerDashboard = () => {
         try {
             const response = await customerApi.cancelBooking(bookingId);
             setFeedback(response.message);
-            fetchBookings();
+            fetchDashboardData();  // Refresh buses and bookings
         } catch (error) {
-            setFeedback('Failed to cancel booking.');
+            setFeedback(error.message);
         }
     };
 
-    const handleSendMessage = async () => {
-        if (!message.trim()) {
-            setFeedback('Message cannot be empty.');
-            return;
-        }
-
-        try {
-            const response = await customerApi.sendMessage({
-                sender_id: parseInt(customerId),
-                receiver_id: 1, // Assuming admin ID is 1
-                content: message,
-            });
-            setFeedback(response.message);
-            setMessage('');
-        } catch (error) {
-            setFeedback('Failed to send message.');
-        }
+    const handleSelectBus = (bus) => {
+        setSelectedBus(bus);
+        setSelectedSeat('');
+        fetchAvailableSeats(bus.id);
     };
 
     return (
@@ -104,57 +88,68 @@ const CustomerDashboard = () => {
 
             {feedback && <div className="feedback">{feedback}</div>}
 
+            {/* Available Buses with Route Information */}
             <section className="bus-list">
-                <h2>Available Buses</h2>
-                <ul>
-                    {buses.map((bus) => (
-                        <li key={bus.id}>
-                            Bus {bus.bus_number} - Seats Available: {bus.available_seats}
-                            <button onClick={() => {
-                                setSelectedBus(bus);
-                                checkAvailableSeats(bus.id);
-                            }}>
-                                Select
-                            </button>
-                        </li>
-                    ))}
-                </ul>
+                <h2>Available Buses (With Routes)</h2>
+                {buses.length === 0 ? (
+                    <p>No buses available.</p>
+                ) : (
+                    <ul>
+                        {buses.map((bus) => {
+                            const route = routes.find(route => route.id === bus.route_id);
+                            return (
+                                <li key={bus.id}>
+                                    <div>
+                                        Bus {bus.bus_number} - Seats Available: {bus.available_seats}
+                                        <br />
+                                        <small>
+                                            {route ? `${route.start_location} ➡ ${route.destination}` : "No Route Info"}
+                                        </small>
+                                    </div>
+                                    <button onClick={() => handleSelectBus(bus)}>Select</button>
+                                </li>
+                            );
+                        })}
+                    </ul>
+                )}
             </section>
 
+            {/* Seat Booking Section */}
             {selectedBus && (
                 <section className="seat-booking">
                     <h2>Book Seat on Bus {selectedBus.bus_number}</h2>
-                    <p>Available Seats: {availableSeats}</p>
-                    <input
-                        type="number"
-                        placeholder="Enter seat number"
-                        value={selectedSeat}
-                        onChange={(e) => setSelectedSeat(e.target.value)}
-                    />
-                    <button onClick={handleBookSeat}>Book Seat</button>
+                    <p>Available Seats:</p>
+                    <ul className="seats-grid">
+                        {availableSeats.map(seat => (
+                            <li
+                                key={seat.seat_number}
+                                className={seat.status === "booked" ? "booked" : ""}
+                                onClick={() => seat.status === "available" && setSelectedSeat(seat.seat_number)}
+                            >
+                                {seat.seat_number}
+                            </li>
+                        ))}
+                    </ul>
+                    <p>Selected Seat: {selectedSeat || "None"}</p>
+                    <button onClick={handleBookSeat} disabled={!selectedSeat}>Book Seat</button>
                 </section>
             )}
 
+            {/* My Bookings */}
             <section className="my-bookings">
                 <h2>My Bookings</h2>
-                <ul>
-                    {bookings.map((booking) => (
-                        <li key={booking.id}>
-                            Booking {booking.id} - Bus {booking.bus_number} - Seat {booking.seat_number}
-                            <button onClick={() => handleCancelBooking(booking.id)}>Cancel</button>
-                        </li>
-                    ))}
-                </ul>
-            </section>
-
-            <section className="contact-admin">
-                <h2>Contact Admin</h2>
-                <textarea
-                    placeholder="Write your message here..."
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                />
-                <button onClick={handleSendMessage}>Send Message</button>
+                {bookings.length === 0 ? (
+                    <p>No bookings found.</p>
+                ) : (
+                    <ul>
+                        {bookings.map(booking => (
+                            <li key={booking.id}>
+                                Booking {booking.id} - Bus {booking.bus_number} - Seat {booking.seat_number}
+                                <button onClick={() => handleCancelBooking(booking.id)}>Cancel</button>
+                            </li>
+                        ))}
+                    </ul>
+                )}
             </section>
         </div>
     );

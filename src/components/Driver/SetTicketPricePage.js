@@ -1,57 +1,69 @@
 import React, { useState, useEffect } from "react";
-import driverApi from "../../api/driverApi";
 import { useNavigate } from "react-router-dom";
-import "./DriverPages.css";
+import driverApi from "../../api/driverApi";
+import './DriverPages.css';
 
 const SetTicketPricePage = () => {
     const [buses, setBuses] = useState([]);
-    const [selectedBusId, setSelectedBusId] = useState("");
+    const [selectedBus, setSelectedBus] = useState("");
     const [ticketPrice, setTicketPrice] = useState("");
-    const [error, setError] = useState("");
+    const [feedback, setFeedback] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchBuses = async () => {
-            try {
-                const buses = await driverApi.getDriverBuses();
-                setBuses(buses);
-                if (buses.length > 0) setSelectedBusId(buses[0].id);
-            } catch (err) {
-                setError("Failed to fetch buses: " + err.message);
-            }
-        };
         fetchBuses();
     }, []);
+
+    const fetchBuses = async () => {
+        try {
+            const fetchedBuses = await driverApi.getDriverBuses();
+            setBuses(fetchedBuses);
+        } catch (error) {
+            setFeedback({ type: "error", message: "Failed to load buses." });
+        }
+    };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await driverApi.setTicketPrice(selectedBusId, parseFloat(ticketPrice));
-            alert("Ticket price updated successfully!");
-            navigate("/driver-dashboard");
-        } catch (err) {
-            setError("Failed to update ticket price: " + err.message);
+            const response = await driverApi.setTicketPrice(selectedBus, ticketPrice);
+            setFeedback({ type: "success", message: response.message });
+        } catch (error) {
+            setFeedback({ type: "error", message: error.message || "Failed to set ticket price." });
         }
     };
 
     return (
-        <div className="driver-page">
-            <h2>Set Ticket Price</h2>
-            {error && <p className="error">{error}</p>}
-            <form onSubmit={handleSubmit}>
-                <label>Bus:</label>
-                <select value={selectedBusId} onChange={(e) => setSelectedBusId(e.target.value)}>
-                    {buses.map(bus => (
-                        <option key={bus.id} value={bus.id}>
-                            {bus.bus_number}
-                        </option>
-                    ))}
-                </select>
-                <label>Ticket Price:</label>
-                <input type="number" value={ticketPrice} onChange={(e) => setTicketPrice(e.target.value)} required />
+        <div className="page-container">
+            <h2 className="page-header">Set Ticket Price</h2>
 
-                <button type="submit">Update Price</button>
+            {feedback && <div className={`feedback ${feedback.type}`}>{feedback.message}</div>}
+
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label>Select Bus</label>
+                    <select value={selectedBus} onChange={(e) => setSelectedBus(e.target.value)} required>
+                        <option value="">Select Bus</option>
+                        {buses.map(bus => (
+                            <option key={bus.id} value={bus.id}>
+                                {bus.bus_number} (Current: ${bus.ticket_price})
+                            </option>
+                        ))}
+                    </select>
+                </div>
+                <div className="form-group">
+                    <label>New Ticket Price</label>
+                    <input
+                        type="number"
+                        step="0.01"
+                        value={ticketPrice}
+                        onChange={(e) => setTicketPrice(e.target.value)}
+                        required
+                    />
+                </div>
+                <button type="submit">Set Ticket Price</button>
             </form>
+            <button onClick={() => navigate("/driver-dashboard")}>Back to Dashboard</button>
         </div>
     );
 };

@@ -1,46 +1,51 @@
 import React, { useState, useEffect } from "react";
 import driverApi from "../../api/driverApi";
 import { useNavigate } from "react-router-dom";
-import "./DriverPages.css";
+import './DriverPages.css';
 
-function DriverRoutesPage() {
+const DriverRoutesPage = () => {
     const [routes, setRoutes] = useState([]);
-    const [error, setError] = useState("");
+    const [feedback, setFeedback] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchRoutes = async () => {
-            try {
-                const data = await driverApi.getDriverRoutes();
-                setRoutes(data);
-            } catch (err) {
-                setError("Failed to fetch routes: " + err.message);
-            }
-        };
         fetchRoutes();
     }, []);
 
+    const fetchRoutes = async () => {
+        try {
+            const fetchedRoutes = await driverApi.getDriverRoutes();
+            setRoutes(fetchedRoutes);
+        } catch (error) {
+            setFeedback("Failed to load routes.");
+        }
+    };
+
     return (
         <div className="page-container">
-            <h2>Your Routes</h2>
-            {error && <p className="error">{error}</p>}
+            <h2 className="page-header">My Routes</h2>
+
+            {feedback && <div className="feedback">{feedback}</div>}
 
             {routes.length === 0 ? (
                 <p>No routes available.</p>
             ) : (
-                <ul className="item-list">
+                <ul className="route-list">
                     {routes.map(route => (
                         <li key={route.id}>
-                            <strong>{route.start_location} ➡ {route.destination}</strong><br />
-                            Departure Time: {route.departure_time || "Not Set"}
+                            <div>
+                                <strong>{route.start_location}</strong> ➡ <strong>{route.destination}</strong>
+                                <br />
+                                Departure Time: {route.departure_time || "Not Set"}
+                            </div>
                         </li>
                     ))}
                 </ul>
             )}
 
-            <button onClick={() => navigate("/driver-dashboard")} className="back-button">Back to Dashboard</button>
+            <button onClick={() => navigate("/driver-dashboard")}>Back to Dashboard</button>
         </div>
     );
-}
+};
 
 export default DriverRoutesPage;

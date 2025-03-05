@@ -1,13 +1,15 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import driverApi from "../../api/driverApi";
-import "./DriverPages.css";
+import './DriverPages.css';
 
 const AddRoutePage = () => {
     const [formData, setFormData] = useState({
         start_location: "",
-        destination: ""
+        destination: "",
     });
-    const [error, setError] = useState("");
+    const [feedback, setFeedback] = useState("");
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -16,27 +18,33 @@ const AddRoutePage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await driverApi.createRoute(formData);
-            alert("Route created successfully!");
-            setFormData({ start_location: "", destination: "" });
-        } catch (err) {
-            setError("Failed to create route: " + err.message);
+            const response = await driverApi.createRoute(formData);
+            setFeedback({ type: "success", message: response.message });
+        } catch (error) {
+            setFeedback({ type: "error", message: error.message || "Failed to create route." });
         }
     };
 
     return (
-        <div className="driver-page">
-            <h2>Add New Route</h2>
-            {error && <p className="error">{error}</p>}
-            <form onSubmit={handleSubmit} className="driver-form">
-                <label>Start Location:</label>
-                <input type="text" name="start_location" value={formData.start_location} onChange={handleChange} required />
+        <div className="page-container">
+            <h2 className="page-header">Add New Route</h2>
 
-                <label>Destination:</label>
-                <input type="text" name="destination" value={formData.destination} onChange={handleChange} required />
+            {feedback && (
+                <div className={`feedback ${feedback.type}`}>{feedback.message}</div>
+            )}
 
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label>Start Location</label>
+                    <input type="text" name="start_location" value={formData.start_location} onChange={handleChange} required />
+                </div>
+                <div className="form-group">
+                    <label>Destination</label>
+                    <input type="text" name="destination" value={formData.destination} onChange={handleChange} required />
+                </div>
                 <button type="submit">Create Route</button>
             </form>
+            <button onClick={() => navigate("/driver-dashboard")}>Back to Dashboard</button>
         </div>
     );
 };

@@ -13,10 +13,10 @@ function DriverDashboard() {
     const fetchDashboardData = async () => {
         try {
             const fetchedRoutes = await driverApi.getDriverRoutes();
-            setRoutes(fetchedRoutes ?? []);  // Safe fallback in case of API issues
+            setRoutes(fetchedRoutes);  // Expecting array (corrected)
 
             const fetchedBuses = await driverApi.getDriverBuses();
-            setBuses(fetchedBuses ?? []);
+            setBuses(fetchedBuses);  // Expecting array (corrected)
         } catch (err) {
             setError(err?.message || "Failed to fetch data");
         }
@@ -70,11 +70,11 @@ function DriverDashboard() {
                 {/* Routes Section */}
                 <div className="section">
                     <h3>Your Routes</h3>
-                    {routes.length === 0 ? (
+                    {Array.isArray(routes) && routes.length === 0 ? (
                         <p>No routes created yet.</p>
                     ) : (
                         <ul>
-                            {routes.map(route => (
+                            {Array.isArray(routes) && routes.map(route => (
                                 <li key={route.id}>
                                     {route.start_location} ➡ {route.destination} ({route.departure_time || "No Departure Time Set"})
                                 </li>
@@ -86,11 +86,11 @@ function DriverDashboard() {
                 {/* Buses Section */}
                 <div className="section">
                     <h3>Your Buses</h3>
-                    {buses.length === 0 ? (
+                    {Array.isArray(buses) && buses.length === 0 ? (
                         <p>No buses added yet.</p>
                     ) : (
                         <ul>
-                            {buses.map(bus => (
+                            {Array.isArray(buses) && buses.map(bus => (
                                 <li key={bus.id} onClick={() => handleBusClick(bus)}>
                                     Bus {bus.bus_number} - {bus.start_location || "Unassigned"}
                                 </li>

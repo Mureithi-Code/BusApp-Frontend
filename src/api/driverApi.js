@@ -1,66 +1,90 @@
-// src/api/driverApi.js
 import apiClient from './apiClient';
 
+const handleApiError = (error) => {
+    console.error("API Error:", error?.response?.data || error.message);
+    throw new Error(error?.response?.data?.message || "An unexpected error occurred.");
+};
+
 const driverApi = {
-    // Fetch all routes for the logged-in driver
     getDriverRoutes: async () => {
-        const response = await apiClient.get('/driver/routes');
-        return response.data.data.routes;  // Updated for new structure
+        try {
+            const response = await apiClient.get('/driver/routes');
+            return response.data.data?.routes || [];  // Safely extract routes array
+        } catch (error) {
+            handleApiError(error);
+        }
     },
 
-    // Fetch all buses for the logged-in driver
     getDriverBuses: async () => {
-        const response = await apiClient.get('/driver/buses');
-
-        const enrichedBuses = response.data.data.buses.map(bus => ({  // Updated
-            ...bus,
-            start_location: bus.start_location || "Unknown",
-            destination: bus.destination || "Unknown",
-        }));
-
-        return enrichedBuses;
+        try {
+            const response = await apiClient.get('/driver/buses');
+            return response.data.data?.buses || [];   // Safely extract buses array
+        } catch (error) {
+            handleApiError(error);
+        }
     },
 
-    // Create a new route
     createRoute: async (data) => {
-        const response = await apiClient.post('/driver/routes', data);
-        return response.data;
+        try {
+            const response = await apiClient.post('/driver/routes', data);
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
     },
 
-    // Add a new bus
     addBus: async (data) => {
-        const response = await apiClient.post('/driver/buses', data);
-        return response.data;
+        try {
+            const response = await apiClient.post('/driver/buses', data);
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
     },
 
-    // Assign a bus to a route
     assignRoute: async (busId, routeId) => {
-        const response = await apiClient.put(`/driver/bus/${busId}/assign_route`, { route_id: routeId });
-        return response.data;
+        try {
+            const response = await apiClient.put(`/driver/bus/${busId}/assign_route`, { route_id: routeId });
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
     },
 
-    // Set departure time for a bus
     setDepartureTime: async (busId, departureTime) => {
-        const response = await apiClient.put(`/driver/bus/${busId}/set_departure_time`, { departure_time: departureTime });
-        return response.data;
+        try {
+            const response = await apiClient.put(`/driver/bus/${busId}/set_departure_time`, { departure_time: departureTime });
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
     },
 
-    // Set ticket price for a bus
     setTicketPrice: async (busId, ticketPrice) => {
-        const response = await apiClient.put(`/driver/bus/${busId}/set_ticket_price`, { ticket_price: ticketPrice });
-        return response.data;
+        try {
+            const response = await apiClient.put(`/driver/bus/${busId}/set_ticket_price`, { ticket_price: ticketPrice });
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
     },
 
-    // Get seat information for a specific bus
     getBusSeats: async (busId) => {
-        const response = await apiClient.get(`/driver/bus/${busId}/seats`);
-        return response.data.data;  // Updated for new structure
+        try {
+            const response = await apiClient.get(`/driver/bus/${busId}/seats`);
+            return response.data.data;  // Extract seat data directly
+        } catch (error) {
+            handleApiError(error);
+        }
     },
 
-    // Delete a bus
     deleteBus: async (busId) => {
-        const response = await apiClient.delete(`/driver/bus/${busId}`);
-        return response.data;
+        try {
+            const response = await apiClient.delete(`/driver/bus/${busId}`);
+            return response.data;
+        } catch (error) {
+            handleApiError(error);
+        }
     },
 };
 

@@ -1,48 +1,68 @@
 import React, { useState, useEffect } from "react";
 import driverApi from "../../api/driverApi";
 import { useNavigate } from "react-router-dom";
-import "./DriverPages.css";
+import './DriverPages.css';
 
-function DriverBusesPage() {
+const DriverBusesPage = () => {
     const [buses, setBuses] = useState([]);
-    const [error, setError] = useState("");
+    const [feedback, setFeedback] = useState("");
     const navigate = useNavigate();
 
     useEffect(() => {
-        const fetchBuses = async () => {
-            try {
-                const data = await driverApi.getDriverBuses();
-                setBuses(data);
-            } catch (err) {
-                setError("Failed to fetch buses: " + err.message);
-            }
-        };
         fetchBuses();
     }, []);
 
+    const fetchBuses = async () => {
+        try {
+            const fetchedBuses = await driverApi.getDriverBuses();
+            setBuses(fetchedBuses);
+        } catch (error) {
+            setFeedback("Failed to load buses.");
+        }
+    };
+
+    const handleDeleteBus = async (busId) => {
+        if (window.confirm("Are you sure you want to delete this bus?")) {
+            try {
+                await driverApi.deleteBus(busId);
+                setBuses(buses.filter(bus => bus.id !== busId));
+                setFeedback("Bus deleted successfully.");
+            } catch (error) {
+                setFeedback("Failed to delete bus.");
+            }
+        }
+    };
+
     return (
         <div className="page-container">
-            <h2>Your Buses</h2>
-            {error && <p className="error">{error}</p>}
+            <h2 className="page-header">My Buses</h2>
+
+            {feedback && <div className="feedback">{feedback}</div>}
 
             {buses.length === 0 ? (
                 <p>No buses available.</p>
             ) : (
-                <ul className="item-list">
+                <ul className="bus-list">
                     {buses.map(bus => (
                         <li key={bus.id}>
-                            <strong>{bus.bus_number}</strong> - {bus.capacity} seats<br />
-                            Ticket Price: ${bus.ticket_price || "Not Set"}<br />
-                            Departure Time: {bus.departure_time || "Not Set"}<br />
-                            {bus.route_id ? `Route: ${bus.start_location} to ${bus.destination}` : "No Route Assigned"}
+                            <div>
+                                <strong>{bus.bus_number}</strong> - Capacity: {bus.capacity} - Available Seats: {bus.available_seats}
+                                <br />
+                                Route: {bus.start_location || "Unassigned"} ➡ {bus.destination || "Unassigned"}
+                                <br />
+                                Ticket Price: ${bus.ticket_price}
+                                <br />
+                                Departure Time: {bus.departure_time || "Not Set"}
+                            </div>
+                            <button onClick={() => handleDeleteBus(bus.id)}>Delete Bus</button>
                         </li>
                     ))}
                 </ul>
             )}
 
-            <button onClick={() => navigate("/driver-dashboard")} className="back-button">Back to Dashboard</button>
+            <button onClick={() => navigate("/driver-dashboard")}>Back to Dashboard</button>
         </div>
     );
-}
+};
 
 export default DriverBusesPage;

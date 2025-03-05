@@ -1,14 +1,16 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import driverApi from "../../api/driverApi";
-import "./DriverPages.css";
+import './DriverPages.css';
 
 const AddBusPage = () => {
     const [formData, setFormData] = useState({
         bus_number: "",
         capacity: "",
-        ticket_price: ""
+        ticket_price: "",
     });
-    const [error, setError] = useState("");
+    const [feedback, setFeedback] = useState("");
+    const navigate = useNavigate();
 
     const handleChange = (e) => {
         setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -17,34 +19,37 @@ const AddBusPage = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
-            await driverApi.addBus({
-                ...formData,
-                capacity: parseInt(formData.capacity),
-                ticket_price: parseFloat(formData.ticket_price || 0)
-            });
-            alert("Bus added successfully!");
-            setFormData({ bus_number: "", capacity: "", ticket_price: "" });
-        } catch (err) {
-            setError("Failed to add bus: " + err.message);
+            const response = await driverApi.addBus(formData);
+            setFeedback({ type: "success", message: response.message });
+        } catch (error) {
+            setFeedback({ type: "error", message: error.message || "Failed to add bus." });
         }
     };
 
     return (
-        <div className="driver-page">
-            <h2>Add New Bus</h2>
-            {error && <p className="error">{error}</p>}
-            <form onSubmit={handleSubmit} className="driver-form">
-                <label>Bus Number:</label>
-                <input type="text" name="bus_number" value={formData.bus_number} onChange={handleChange} required />
+        <div className="page-container">
+            <h2 className="page-header">Add New Bus</h2>
 
-                <label>Capacity:</label>
-                <input type="number" name="capacity" value={formData.capacity} onChange={handleChange} required />
+            {feedback && (
+                <div className={`feedback ${feedback.type}`}>{feedback.message}</div>
+            )}
 
-                <label>Ticket Price (optional):</label>
-                <input type="number" name="ticket_price" value={formData.ticket_price} onChange={handleChange} step="0.01" />
-
+            <form onSubmit={handleSubmit}>
+                <div className="form-group">
+                    <label>Bus Number</label>
+                    <input type="text" name="bus_number" value={formData.bus_number} onChange={handleChange} required />
+                </div>
+                <div className="form-group">
+                    <label>Capacity</label>
+                    <input type="number" name="capacity" value={formData.capacity} onChange={handleChange} required />
+                </div>
+                <div className="form-group">
+                    <label>Ticket Price</label>
+                    <input type="number" step="0.01" name="ticket_price" value={formData.ticket_price} onChange={handleChange} required />
+                </div>
                 <button type="submit">Add Bus</button>
             </form>
+            <button onClick={() => navigate("/driver-dashboard")}>Back to Dashboard</button>
         </div>
     );
 };
