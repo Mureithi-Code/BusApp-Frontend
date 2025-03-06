@@ -54,6 +54,12 @@ const customerApi = {
         return handleRequest(() => apiClient.delete(`/customer/cancel_booking/${bookingId}`));
     },
 
+    editBooking: async (bookingId, data) => {
+        console.log(`📤 Editing booking ${bookingId} with`, data);
+        return handleRequest(() => apiClient.put(`/customer/edit_booking/${bookingId}`, data));
+    },
+    
+
     sendMessage: async (messageData) => {
         console.log("📤 Sending message:", messageData); // Debugging
         return handleRequest(() => apiClient.post('/customer/send_message', messageData));

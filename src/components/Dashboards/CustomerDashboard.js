@@ -1,178 +1,216 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom'; // Assuming you're using React Router
+import { useNavigate } from 'react-router-dom';
 import customerApi from '../../api/customerApi';
 import './CustomerDashboard.css';
 
 const CustomerDashboard = () => {
     const [buses, setBuses] = useState([]);
+    const [routes, setRoutes] = useState([]);
     const [bookings, setBookings] = useState([]);
+    const [availableSeats, setAvailableSeats] = useState([]);
     const [selectedBus, setSelectedBus] = useState(null);
     const [selectedSeat, setSelectedSeat] = useState('');
+    const [message, setMessage] = useState('');
     const [feedback, setFeedback] = useState('');
-    const [availableSeats, setAvailableSeats] = useState([]);
-    const [routes, setRoutes] = useState([]);
-    const navigate = useNavigate();  // For navigation
+    const [editingBooking, setEditingBooking] = useState(null);  // Holds booking being edited
 
     const customerId = localStorage.getItem('customer_id');
-
-    const fetchDashboardData = async () => {
-        try {
-            const [fetchedBuses, fetchedRoutes] = await Promise.all([
-                customerApi.getAllBuses(),
-                customerApi.getAllRoutes(),
-            ]);
-
-            const busesWithRoutes = fetchedBuses.filter(bus => bus.route_id);
-            setBuses(busesWithRoutes);
-            setRoutes(fetchedRoutes);
-
-            if (customerId) {
-                const fetchedBookings = await customerApi.getMyBookings();
-                if (!Array.isArray(fetchedBookings)) {
-                    setBookings([]);
-                } else {
-                    setBookings(fetchedBookings);
-                }
-            } else {
-                setBookings([]);
-                setFeedback("⚠️ Customer ID not found. Please log in again.");
-            }
-        } catch (error) {
-            setFeedback(error.message || "Failed to fetch dashboard data.");
-        }
-    };
-
-    const fetchAvailableSeats = async (busId) => {
-        try {
-            const response = await customerApi.getAvailableSeats(busId);
-            setAvailableSeats(response.seats || []);
-        } catch (error) {
-            setFeedback(error.message || "Failed to fetch available seats.");
-        }
-    };
+    const navigate = useNavigate();
 
     useEffect(() => {
         fetchDashboardData();
     }, []);
 
+    const fetchDashboardData = async () => {
+        const [busesData, routesData, bookingsData] = await Promise.all([
+            customerApi.getAllBuses(),
+            customerApi.getAllRoutes(),
+            customerApi.getMyBookings()
+        ]);
+        setBuses(busesData);
+        setRoutes(routesData);
+        setBookings(bookingsData);
+    };
+
+    const handleSelectBus = async (bus) => {
+        setSelectedBus(bus);
+        setSelectedSeat('');
+        const seatsData = await customerApi.getAvailableSeats(bus.id);
+        setAvailableSeats(seatsData.seats);
+    };
+
     const handleBookSeat = async () => {
         if (!selectedBus || !selectedSeat) {
-            setFeedback('Please select a bus and seat number.');
+            setFeedback('Please select a bus and seat.');
             return;
         }
 
-        if (!customerId) {
-            setFeedback("⚠️ Error: Customer ID not found. Please log in again.");
-            return;
-        }
+        const bookingData = {
+            customer_id: parseInt(customerId),
+            bus_id: selectedBus.id,
+            seat_number: parseInt(selectedSeat),
+        };
 
-        try {
-            const bookingData = {
-                customer_id: parseInt(customerId),
-                bus_id: selectedBus.id,
-                seat_number: parseInt(selectedSeat),
-            };
-
-            const response = await customerApi.bookSeat(bookingData);
-            setFeedback(response.message);
-
-            setSelectedSeat('');
-            await fetchDashboardData();
-            fetchAvailableSeats(selectedBus.id);
-        } catch (error) {
-            setFeedback(error.message);
-        }
+        await customerApi.bookSeat(bookingData);
+        setFeedback('Seat booked successfully');
+        fetchDashboardData();
+        handleSelectBus(selectedBus);
     };
 
     const handleCancelBooking = async (bookingId) => {
-        try {
-            const response = await customerApi.cancelBooking(bookingId);
-            setFeedback(response.message);
-            fetchDashboardData();
-        } catch (error) {
-            setFeedback(error.message);
-        }
+        await customerApi.cancelBooking(bookingId);
+        setFeedback('Booking cancelled');
+        fetchDashboardData();
     };
 
-    const handleSelectBus = (bus) => {
-        setSelectedBus(bus);
-        setSelectedSeat('');
-        fetchAvailableSeats(bus.id);
+    const handleSendMessage = async () => {
+        if (!message.trim()) return setFeedback('Message cannot be empty');
+        await customerApi.sendMessage({
+            customer_id: parseInt(customerId),
+            admin_id: 1,
+            content: message,
+        });
+        setFeedback('Message sent to admin');
+        setMessage('');
     };
 
     const handleLogout = () => {
-        localStorage.removeItem('customer_id'); // Clear stored customer ID
-        navigate('/login');  // Redirect to login page (adjust route as needed)
+        localStorage.removeItem('customer_id');
+        navigate('/login');
+    };
+
+    const startEditBooking = (booking) => {
+        setEditingBooking(booking);
+        const currentBus = buses.find(b => b.id === booking.bus_id);
+        handleSelectBus(currentBus);
+    };
+
+    const handleEditBooking = async () => {
+        if (!editingBooking || !selectedBus || !selectedSeat) {
+            setFeedback('Please select a new bus and seat.');
+            return;
+        }
+
+        const updateData = {
+            new_bus_id: selectedBus.id,
+            new_seat_number: parseInt(selectedSeat),
+        };
+
+        await customerApi.editBooking(editingBooking.id, updateData);
+        setFeedback('Booking updated successfully');
+        setEditingBooking(null);
+        fetchDashboardData();
     };
 
     return (
         <div className="customer-dashboard">
-            <header className="dashboard-header">
+            <nav className="navbar">
                 <h1>Customer Dashboard</h1>
-                <button className="logout-button" onClick={handleLogout}>Logout</button>
-            </header>
+                <div>
+                    <button onClick={() => setEditingBooking(null)}>Dashboard</button>
+                    <button onClick={() => setEditingBooking(null)}>My Bookings</button>
+                    <button onClick={() => setMessage('')}>Messages</button>
+                    <button onClick={handleLogout}>Logout</button>
+                </div>
+            </nav>
 
             {feedback && <div className="feedback">{feedback}</div>}
 
-            <section className="bus-list">
-                <h2>Available Buses (With Routes)</h2>
-                {buses.length === 0 ? (
-                    <p>No buses available.</p>
-                ) : (
+            {/* Bus Selection & Seat Booking */}
+            {!editingBooking && (
+                <section className="bus-selection">
+                    <h2>Select a Bus</h2>
                     <ul>
-                        {buses.map((bus) => {
-                            const route = routes.find(route => route.id === bus.route_id);
+                        {buses.map(bus => {
+                            const route = routes.find(r => r.id === bus.route_id);
                             return (
                                 <li key={bus.id}>
-                                    <div>
-                                        Bus {bus.bus_number} - Seats Available: {bus.available_seats}
-                                        <br />
-                                        <small>
-                                            {route ? `${route.start_location} ➡ ${route.destination}` : "No Route Info"}
-                                        </small>
-                                    </div>
-                                    <button onClick={() => handleSelectBus(bus)}>Select</button>
+                                    {bus.bus_number} ({route?.start_location} ➡ {route?.destination}) - Seats Available: {bus.available_seats}
+                                    <button onClick={() => handleSelectBus(bus)}>View Seats</button>
                                 </li>
                             );
                         })}
                     </ul>
-                )}
-            </section>
 
-            {selectedBus && (
-                <section className="seat-booking">
-                    <h2>Book Seat on Bus {selectedBus.bus_number}</h2>
-                    <p>Available Seats:</p>
-                    <ul className="seats-grid">
-                        {availableSeats.map(seat => (
-                            <li
-                                key={seat.seat_number}
-                                className={seat.status === "booked" ? "booked" : ""}
-                                onClick={() => seat.status === "available" && setSelectedSeat(seat.seat_number)}
-                            >
-                                {seat.seat_number}
-                            </li>
-                        ))}
-                    </ul>
-                    <p>Selected Seat: {selectedSeat || "None"}</p>
-                    <button onClick={handleBookSeat} disabled={!selectedSeat}>Book Seat</button>
+                    {selectedBus && (
+                        <section className="seat-booking">
+                            <h2>Book Seat on Bus {selectedBus.bus_number}</h2>
+                            <div className="seats-grid">
+                                {availableSeats.map(seat => (
+                                    <div
+                                        key={seat.seat_number}
+                                        className={`seat ${seat.status === 'booked' ? 'booked' : ''} ${selectedSeat === seat.seat_number ? 'selected' : ''}`}
+                                        onClick={() => seat.status === 'available' && setSelectedSeat(seat.seat_number)}
+                                    >
+                                        {seat.seat_number}
+                                    </div>
+                                ))}
+                            </div>
+                            <button onClick={handleBookSeat} disabled={!selectedSeat}>Book Selected Seat</button>
+                        </section>
+                    )}
                 </section>
             )}
 
-            <section className="my-bookings">
-                <h2>My Bookings</h2>
-                {bookings.length === 0 ? (
-                    <p>No bookings found.</p>
-                ) : (
+            {/* My Bookings + Edit Booking */}
+            {!selectedBus && !editingBooking && (
+                <section className="my-bookings">
+                    <h2>My Bookings</h2>
                     <ul>
                         {bookings.map(booking => (
                             <li key={booking.id}>
                                 Booking {booking.id} - Bus {booking.bus_number} - Seat {booking.seat_number}
+                                <button onClick={() => startEditBooking(booking)}>Edit</button>
                                 <button onClick={() => handleCancelBooking(booking.id)}>Cancel</button>
                             </li>
                         ))}
                     </ul>
-                )}
+                </section>
+            )}
+
+            {/* Edit Booking - Bus & Seat Picker */}
+            {editingBooking && (
+                <section className="edit-booking">
+                    <h2>Edit Booking #{editingBooking.id}</h2>
+
+                    <h3>Select New Bus</h3>
+                    <ul>
+                        {buses.map(bus => {
+                            const route = routes.find(r => r.id === bus.route_id);
+                            return (
+                                <li key={bus.id}>
+                                    {bus.bus_number} ({route?.start_location} ➡ {route?.destination}) - Seats Available: {bus.available_seats}
+                                    <button onClick={() => handleSelectBus(bus)}>Select Bus</button>
+                                </li>
+                            );
+                        })}
+                    </ul>
+
+                    {selectedBus && (
+                        <>
+                            <h3>Select New Seat on Bus {selectedBus.bus_number}</h3>
+                            <div className="seats-grid">
+                                {availableSeats.map(seat => (
+                                    <div
+                                        key={seat.seat_number}
+                                        className={`seat ${seat.status === 'booked' ? 'booked' : ''} ${selectedSeat === seat.seat_number ? 'selected' : ''}`}
+                                        onClick={() => seat.status === 'available' && setSelectedSeat(seat.seat_number)}
+                                    >
+                                        {seat.seat_number}
+                                    </div>
+                                ))}
+                            </div>
+                            <button onClick={handleEditBooking} disabled={!selectedSeat}>Update Booking</button>
+                        </>
+                    )}
+                </section>
+            )}
+
+            {/* Message Admin */}
+            <section className="message-admin">
+                <h2>Message Admin</h2>
+                <textarea value={message} onChange={(e) => setMessage(e.target.value)} placeholder="Type your message to admin..." />
+                <button onClick={handleSendMessage}>Send Message</button>
             </section>
         </div>
     );
