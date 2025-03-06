@@ -14,18 +14,28 @@ function LoginForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
+        setMessage("");  // Clear previous messages
         try {
             const response = await authApi.login(credentials);
-            setMessage("Login successful!");
+            console.log("Login response:", response);
 
+            setMessage("✅ Login successful!");
+
+            // Save token and role in localStorage
             localStorage.setItem("token", response.token);
             localStorage.setItem("role", response.role);
 
+            // Role-specific storage (Driver and Customer store IDs and names)
             if (response.role === "Driver") {
-                localStorage.setItem("driver_id", response.driver_id);   // Save driver_id
-                localStorage.setItem("driver_name", response.name);    
+                localStorage.setItem("driver_id", response.driver_id);   // ✅ Save driver_id
+                localStorage.setItem("driver_name", response.name);      // ✅ Optional for UI
+            } else if (response.role === "Customer") {
+                localStorage.setItem("customer_id", response.customer_id);  // ✅ Save customer_id
+                console.log("Stored customer_id:", localStorage.getItem("customer_id"));
+                localStorage.setItem("customer_name", response.name);      // ✅ Optional for UI
             }
 
+            // Navigate based on role
             switch (response.role) {
                 case "Admin":
                     navigate("/admin-dashboard");
@@ -37,10 +47,10 @@ function LoginForm() {
                     navigate("/customer-dashboard");
                     break;
                 default:
-                    setMessage("Unknown role, please contact support.");
+                    setMessage("❓ Unknown role, please contact support.");
             }
         } catch (error) {
-            setMessage(error.message || "Login failed.");
+            setMessage(`❌ Login failed: ${error.message || "Please check your credentials."}`);
         }
     };
 
@@ -48,11 +58,25 @@ function LoginForm() {
         <div className="auth-container">
             <h2>Login</h2>
             <form onSubmit={handleSubmit}>
-                <input type="email" name="email" placeholder="Email" onChange={handleChange} required />
-                <input type="password" name="password" placeholder="Password" onChange={handleChange} required />
+                <input
+                    type="email"
+                    name="email"
+                    placeholder="Email"
+                    value={credentials.email}
+                    onChange={handleChange}
+                    required
+                />
+                <input
+                    type="password"
+                    name="password"
+                    placeholder="Password"
+                    value={credentials.password}
+                    onChange={handleChange}
+                    required
+                />
                 <button type="submit">Login</button>
             </form>
-            {message && <p className="auth-message">{message}</p>}
+            {message && <p className={`auth-message ${message.startsWith("✅") ? "success" : "error"}`}>{message}</p>}
             <p>Don't have an account? <a href="/register">Register here</a></p>
         </div>
     );

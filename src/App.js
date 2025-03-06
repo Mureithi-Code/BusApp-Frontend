@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import RegisterForm from "./components/Auth/RegisterForm";
 import LoginForm from "./components/Auth/LoginForm";
@@ -18,6 +18,34 @@ import DriverRoutesPage from "./components/Driver/DriverRoutesPage";
 import DriverBusesPage from "./components/Driver/DriverBusesPage";
 
 function App() {
+    useEffect(() => {
+        const token = localStorage.getItem("token");
+        const role = localStorage.getItem("role");
+
+        // 🔔 Check customer_id for customers
+        if (role === "Customer") {
+            const customerId = localStorage.getItem("customer_id");
+            if (!customerId) {
+                console.warn("Missing customer_id for logged-in customer. Logging out.");
+                localStorage.clear();
+                window.location.href = "/";  // Redirect to login
+            }
+        }
+
+        // (Optional) Redirect logged-in users to their dashboards immediately
+        if (token && role) {
+            const redirectMap = {
+                "Admin": "/admin-dashboard",
+                "Driver": "/driver-dashboard",
+                "Customer": "/customer-dashboard"
+            };
+
+            if (window.location.pathname === "/" && redirectMap[role]) {
+                window.location.href = redirectMap[role];  // Auto-redirect
+            }
+        }
+    }, []);
+
     return (
         <Router>
             <Routes>

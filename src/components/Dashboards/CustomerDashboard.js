@@ -4,28 +4,42 @@ import './CustomerDashboard.css';
 
 const CustomerDashboard = () => {
     const [buses, setBuses] = useState([]);
-    const [bookings, setBookings] = useState([]);
+    const [bookings, setBookings] = useState([]); // Ensure bookings is an array
     const [selectedBus, setSelectedBus] = useState(null);
     const [selectedSeat, setSelectedSeat] = useState('');
     const [feedback, setFeedback] = useState('');
     const [availableSeats, setAvailableSeats] = useState([]);
     const [routes, setRoutes] = useState([]);
 
-    const customerId = localStorage.getItem('user_id');
+    const customerId = localStorage.getItem('customer_id');  
 
     const fetchDashboardData = async () => {
         try {
-            const fetchedBuses = await customerApi.getAllBuses();
-            const fetchedRoutes = await customerApi.getAllRoutes();
-            const fetchedBookings = await customerApi.getMyBookings(customerId);
+            const [fetchedBuses, fetchedRoutes] = await Promise.all([
+                customerApi.getAllBuses(),
+                customerApi.getAllRoutes(),
+            ]);
 
-            // Filter buses — only keep those assigned to routes
             const busesWithRoutes = fetchedBuses.filter(bus => bus.route_id);
-
             setBuses(busesWithRoutes);
-            setBookings(fetchedBookings);
             setRoutes(fetchedRoutes);
+
+            if (customerId) {
+                const fetchedBookings = await customerApi.getMyBookings();
+                console.log("📥 Bookings API Response:", fetchedBookings); // Debugging
+
+                if (!Array.isArray(fetchedBookings)) {
+                    console.error("❌ Bookings is not an array!", fetchedBookings);
+                    setBookings([]);  // Prevent error
+                } else {
+                    setBookings(fetchedBookings);
+                }
+            } else {
+                setBookings([]);
+                setFeedback("⚠️ Customer ID not found. Please log in again.");
+            }
         } catch (error) {
+            console.error("❌ Failed to fetch dashboard data:", error);
             setFeedback(error.message || "Failed to fetch dashboard data.");
         }
     };
@@ -33,7 +47,7 @@ const CustomerDashboard = () => {
     const fetchAvailableSeats = async (busId) => {
         try {
             const response = await customerApi.getAvailableSeats(busId);
-            setAvailableSeats(response.seats);
+            setAvailableSeats(response.seats || []);
         } catch (error) {
             setFeedback(error.message || "Failed to fetch available seats.");
         }
@@ -48,20 +62,29 @@ const CustomerDashboard = () => {
             setFeedback('Please select a bus and seat number.');
             return;
         }
-
+    
+        if (!customerId) {  
+            setFeedback("⚠️ Error: Customer ID not found. Please log in again.");
+            return;
+        }
+    
         try {
             const bookingData = {
                 customer_id: parseInt(customerId),
                 bus_id: selectedBus.id,
-                seat_number: parseInt(selectedSeat)
+                seat_number: parseInt(selectedSeat),
             };
-
+    
+            console.log("📤 Booking Data:", bookingData); // Debugging
+    
             const response = await customerApi.bookSeat(bookingData);
             setFeedback(response.message);
+    
             setSelectedSeat('');
-            fetchDashboardData();  // Refresh buses and bookings
+            await fetchDashboardData();
             fetchAvailableSeats(selectedBus.id);
         } catch (error) {
+            console.error("❌ Booking error:", error);
             setFeedback(error.message);
         }
     };
@@ -70,8 +93,9 @@ const CustomerDashboard = () => {
         try {
             const response = await customerApi.cancelBooking(bookingId);
             setFeedback(response.message);
-            fetchDashboardData();  // Refresh buses and bookings
+            fetchDashboardData();
         } catch (error) {
+            console.error("❌ Cancellation error:", error);
             setFeedback(error.message);
         }
     };
@@ -88,7 +112,6 @@ const CustomerDashboard = () => {
 
             {feedback && <div className="feedback">{feedback}</div>}
 
-            {/* Available Buses with Route Information */}
             <section className="bus-list">
                 <h2>Available Buses (With Routes)</h2>
                 {buses.length === 0 ? (
@@ -114,7 +137,6 @@ const CustomerDashboard = () => {
                 )}
             </section>
 
-            {/* Seat Booking Section */}
             {selectedBus && (
                 <section className="seat-booking">
                     <h2>Book Seat on Bus {selectedBus.bus_number}</h2>
@@ -135,7 +157,6 @@ const CustomerDashboard = () => {
                 </section>
             )}
 
-            {/* My Bookings */}
             <section className="my-bookings">
                 <h2>My Bookings</h2>
                 {bookings.length === 0 ? (
