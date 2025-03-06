@@ -22,10 +22,15 @@ const AdminDashboard = () => {
             const fetchedDrivers = await adminApi.getAllDrivers();
             const fetchedMessages = await adminApi.getAllMessages();
 
-            setBuses(fetchedBuses || []);
-            setRoutes(fetchedRoutes || []);
-            setDrivers(fetchedDrivers || []);
-            setMessages(fetchedMessages || []);
+            console.log("Buses:", fetchedBuses);
+            console.log("Routes:", fetchedRoutes);
+            console.log("Drivers:", fetchedDrivers);
+            console.log("Messages:", fetchedMessages);
+
+            setBuses(Array.isArray(fetchedBuses) ? fetchedBuses : []);
+            setRoutes(Array.isArray(fetchedRoutes) ? fetchedRoutes : []);
+            setDrivers(Array.isArray(fetchedDrivers) ? fetchedDrivers : []);
+            setMessages(Array.isArray(fetchedMessages) ? fetchedMessages : []);
         } catch (error) {
             setFeedback(error.message || "Failed to load data.");
         }
@@ -62,7 +67,7 @@ const AdminDashboard = () => {
         }
 
         try {
-            await adminApi.replyToMessage(selectedMessage.id, { content: replyContent });
+            await adminApi.replyMessage(selectedMessage.id, replyContent);
             setFeedback("Reply sent successfully.");
             setReplyContent("");
             fetchData();
@@ -73,6 +78,7 @@ const AdminDashboard = () => {
 
     return (
         <div className="admin-dashboard">
+            {/* Sidebar Navigation */}
             <aside className="sidebar">
                 <h2>Admin Panel</h2>
                 <ul>
@@ -88,33 +94,43 @@ const AdminDashboard = () => {
 
                 {feedback && <div className="feedback">{feedback}</div>}
 
-                {/* View Buses Section */}
+                {/* Buses Section */}
                 <section id="buses">
-                    <h2>All Buses</h2>
-                    {buses.length === 0 ? <p>No buses available.</p> : (
+                    <h2>All Buses (Assigned & Unassigned)</h2>
+                    {buses.length === 0 ? (
+                        <p>No buses available.</p>
+                    ) : (
                         <ul>
                             {buses.map(bus => (
                                 <li key={bus.id}>
-                                    <strong>Bus {bus.bus_number}</strong> - 
-                                    {bus.route_id ? ` Assigned to Route ${bus.route_id}` : " Unassigned"}
-                                    <br />
-                                    Ticket Price: ${bus.ticket_price}
+                                    <strong>Bus {bus.bus_number}</strong>
+                                    <div>
+                                        {bus.route_id
+                                            ? `Assigned to Route ID ${bus.route_id}`
+                                            : "Unassigned (No Route)"}
+                                    </div>
+                                    <div>Ticket Price: ${bus.ticket_price}</div>
                                 </li>
                             ))}
                         </ul>
                     )}
                 </section>
 
-                {/* View Routes Section */}
+                {/* Routes Section */}
                 <section id="routes">
-                    <h2>All Routes</h2>
-                    {routes.length === 0 ? <p>No routes available.</p> : (
+                    <h2>All Routes (With & Without Buses)</h2>
+                    {routes.length === 0 ? (
+                        <p>No routes available.</p>
+                    ) : (
                         <ul>
                             {routes.map(route => (
                                 <li key={route.id}>
                                     <strong>{route.start_location} ➡ {route.destination}</strong>
-                                    {route.bus_id ? ` - Bus ${route.bus_id} Assigned` : " - No Bus Assigned"}
-                                    <br />
+                                    <div>
+                                        {route.bus_id
+                                            ? `Bus ID ${route.bus_id} Assigned`
+                                            : "No Bus Assigned"}
+                                    </div>
                                     <button onClick={() => handleCancelRoute(route.id)}>Cancel Route</button>
                                 </li>
                             ))}
@@ -122,15 +138,16 @@ const AdminDashboard = () => {
                     )}
                 </section>
 
-                {/* Manage Drivers Section */}
+                {/* Drivers Section */}
                 <section id="drivers">
                     <h2>Manage Drivers</h2>
-                    {drivers.length === 0 ? <p>No drivers available.</p> : (
+                    {drivers.length === 0 ? (
+                        <p>No drivers available.</p>
+                    ) : (
                         <ul>
                             {drivers.map(driver => (
                                 <li key={driver.id}>
                                     <strong>{driver.name}</strong> ({driver.email})
-                                    <br />
                                     <button onClick={() => handleRemoveDriver(driver.id)}>Remove Driver</button>
                                 </li>
                             ))}
@@ -138,10 +155,12 @@ const AdminDashboard = () => {
                     )}
                 </section>
 
-                {/* View & Reply to Messages */}
+                {/* Messages Section */}
                 <section id="messages">
                     <h2>Customer Messages</h2>
-                    {messages.length === 0 ? <p>No messages available.</p> : (
+                    {messages.length === 0 ? (
+                        <p>No messages found.</p>
+                    ) : (
                         <div className="messages-container">
                             <ul className="message-list">
                                 {messages.map(message => (
@@ -155,14 +174,14 @@ const AdminDashboard = () => {
                                 ))}
                             </ul>
 
-                            {/* Reply Form */}
+                            {/* Reply Box */}
                             {selectedMessage && (
                                 <div className="reply-box">
                                     <h3>Reply to Message</h3>
                                     <p><strong>Message:</strong> {selectedMessage.content}</p>
                                     <textarea 
-                                        placeholder="Write your reply here..." 
-                                        value={replyContent} 
+                                        value={replyContent}
+                                        placeholder="Type your reply here..."
                                         onChange={(e) => setReplyContent(e.target.value)}
                                     />
                                     <button onClick={handleReplyMessage}>Send Reply</button>

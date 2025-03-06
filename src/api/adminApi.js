@@ -14,23 +14,27 @@ const handleRequest = async (apiCall) => {
 
 const adminApi = {
     getAllBuses: async () => {
-        const responseData = await handleRequest(() => apiClient.get('/admin/buses'));
-        return responseData?.data?.buses || []; 
+        const response = await handleRequest(() => apiClient.get('/admin/buses'));
+        const buses = response.data?.buses || (Array.isArray(response.data) ? response.data : []);
+        return Array.isArray(buses) ? buses : []; 
     },
 
     getAllRoutes: async () => {
-        const responseData = await handleRequest(() => apiClient.get('/admin/routes'));
-        return responseData?.data?.routes || [];
+        const response = await handleRequest(() => apiClient.get('/admin/routes'));
+        const routes = response.data?.routes || (Array.isArray(response.data) ? response.data : []);
+        return Array.isArray(routes) ? routes : [];
     },
 
     getAllDrivers: async () => {
-        const responseData = await handleRequest(() => apiClient.get('/admin/drivers'));
-        return responseData?.data?.driver || [];
+        const response = await handleRequest(() => apiClient.get('/admin/drivers'));
+        const drivers = response.data?.drivers || (Array.isArray(response.data) ? response.data : []);
+        return Array.isArray(drivers) ? drivers : [];
     },
 
     getAllMessages: async () => {
-        const responseData = await handleRequest(() => apiClient.get('/admin/messages'));
-        return responseData?.data?.messages || [];
+        const response = await handleRequest(() => apiClient.get('/admin/messages'));
+        const messages = response.data?.messages || (Array.isArray(response.data) ? response.data : []);
+        return Array.isArray(messages) ? messages : [];
     },
 
     removeDriver: async (driverId) => {
