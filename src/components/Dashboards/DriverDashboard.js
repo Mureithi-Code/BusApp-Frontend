@@ -2,21 +2,23 @@ import React, { useState, useEffect } from "react";
 import driverApi from "../../api/driverApi";
 import { useNavigate } from "react-router-dom";
 import "./DriverDashboard.css";
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 function DriverDashboard() {
     const [routes, setRoutes] = useState([]);
     const [buses, setBuses] = useState([]);
     const [selectedBus, setSelectedBus] = useState(null);
     const [error, setError] = useState("");
+    const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
 
     const fetchDashboardData = async () => {
         try {
             const fetchedRoutes = await driverApi.getDriverRoutes();
-            setRoutes(fetchedRoutes);  // Expecting array (corrected)
+            setRoutes(fetchedRoutes);  
 
             const fetchedBuses = await driverApi.getDriverBuses();
-            setBuses(fetchedBuses);  // Expecting array (corrected)
+            setBuses(fetchedBuses);  
         } catch (err) {
             setError(err?.message || "Failed to fetch data");
         }
@@ -49,9 +51,23 @@ function DriverDashboard() {
 
     return (
         <div className="driver-dashboard">
-            <header>
-                <h2>Driver Dashboard</h2>
-                <nav className="navbar">
+
+            {/* Background Image */}
+            <img 
+                src="https://images.pexels.com/photos/20152874/pexels-photo-20152874/free-photo-of-red-bus-on-a-street-in-london.jpeg" 
+                alt="Background" 
+                className="dashboard-background" 
+            />
+
+            {/* Sidebar */}
+            <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
+                <div className="sidebar-header">
+                    <h2>Driver Dashboard</h2>
+                    <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                        {sidebarOpen ? <FaTimes /> : <FaBars />}
+                    </button>
+                </div>
+                <nav className="sidebar-nav">
                     <button onClick={() => navigate("/driver/add-route")}>Add Route</button>
                     <button onClick={() => navigate("/driver/add-bus")}>Add Bus</button>
                     <button onClick={() => navigate("/driver/assign-bus-route")}>Assign Bus to Route</button>
@@ -62,11 +78,16 @@ function DriverDashboard() {
                     <button onClick={() => navigate("/driver/view-buses")}>View Buses</button>
                     <button onClick={handleLogout}>Logout</button>
                 </nav>
-            </header>
+            </div>
 
-            {error && <p className="error">{error}</p>}
-
+            {/* Main Content */}
             <div className="dashboard-content">
+                <header className="dashboard-header">
+                    <h2>Driver Dashboard</h2>
+                </header>
+
+                {error && <p className="error">{error}</p>}
+
                 {/* Routes Section */}
                 <div className="section">
                     <h3>Your Routes</h3>
