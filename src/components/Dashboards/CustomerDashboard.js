@@ -1,17 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useNavigate } from 'react-router-dom'; // Assuming you're using React Router
 import customerApi from '../../api/customerApi';
 import './CustomerDashboard.css';
 
 const CustomerDashboard = () => {
     const [buses, setBuses] = useState([]);
-    const [bookings, setBookings] = useState([]); // Ensure bookings is an array
+    const [bookings, setBookings] = useState([]);
     const [selectedBus, setSelectedBus] = useState(null);
     const [selectedSeat, setSelectedSeat] = useState('');
     const [feedback, setFeedback] = useState('');
     const [availableSeats, setAvailableSeats] = useState([]);
     const [routes, setRoutes] = useState([]);
+    const navigate = useNavigate();  // For navigation
 
-    const customerId = localStorage.getItem('customer_id');  
+    const customerId = localStorage.getItem('customer_id');
 
     const fetchDashboardData = async () => {
         try {
@@ -26,11 +28,8 @@ const CustomerDashboard = () => {
 
             if (customerId) {
                 const fetchedBookings = await customerApi.getMyBookings();
-                console.log("📥 Bookings API Response:", fetchedBookings); // Debugging
-
                 if (!Array.isArray(fetchedBookings)) {
-                    console.error("❌ Bookings is not an array!", fetchedBookings);
-                    setBookings([]);  // Prevent error
+                    setBookings([]);
                 } else {
                     setBookings(fetchedBookings);
                 }
@@ -39,7 +38,6 @@ const CustomerDashboard = () => {
                 setFeedback("⚠️ Customer ID not found. Please log in again.");
             }
         } catch (error) {
-            console.error("❌ Failed to fetch dashboard data:", error);
             setFeedback(error.message || "Failed to fetch dashboard data.");
         }
     };
@@ -62,29 +60,26 @@ const CustomerDashboard = () => {
             setFeedback('Please select a bus and seat number.');
             return;
         }
-    
-        if (!customerId) {  
+
+        if (!customerId) {
             setFeedback("⚠️ Error: Customer ID not found. Please log in again.");
             return;
         }
-    
+
         try {
             const bookingData = {
                 customer_id: parseInt(customerId),
                 bus_id: selectedBus.id,
                 seat_number: parseInt(selectedSeat),
             };
-    
-            console.log("📤 Booking Data:", bookingData); // Debugging
-    
+
             const response = await customerApi.bookSeat(bookingData);
             setFeedback(response.message);
-    
+
             setSelectedSeat('');
             await fetchDashboardData();
             fetchAvailableSeats(selectedBus.id);
         } catch (error) {
-            console.error("❌ Booking error:", error);
             setFeedback(error.message);
         }
     };
@@ -95,7 +90,6 @@ const CustomerDashboard = () => {
             setFeedback(response.message);
             fetchDashboardData();
         } catch (error) {
-            console.error("❌ Cancellation error:", error);
             setFeedback(error.message);
         }
     };
@@ -106,9 +100,17 @@ const CustomerDashboard = () => {
         fetchAvailableSeats(bus.id);
     };
 
+    const handleLogout = () => {
+        localStorage.removeItem('customer_id'); // Clear stored customer ID
+        navigate('/login');  // Redirect to login page (adjust route as needed)
+    };
+
     return (
         <div className="customer-dashboard">
-            <h1>Customer Dashboard</h1>
+            <header className="dashboard-header">
+                <h1>Customer Dashboard</h1>
+                <button className="logout-button" onClick={handleLogout}>Logout</button>
+            </header>
 
             {feedback && <div className="feedback">{feedback}</div>}
 
