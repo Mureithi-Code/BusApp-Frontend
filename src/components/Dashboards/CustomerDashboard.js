@@ -22,14 +22,20 @@ const CustomerDashboard = () => {
     }, []);
 
     const fetchDashboardData = async () => {
-        const [busesData, routesData, bookingsData] = await Promise.all([
-            customerApi.getAllBuses(),
-            customerApi.getAllRoutes(),
-            customerApi.getMyBookings()
-        ]);
-        setBuses(busesData);
-        setRoutes(routesData);
-        setBookings(bookingsData);
+        try {
+            const [busesData, routesData, bookingsData] = await Promise.all([
+                customerApi.getAllBuses(),
+                customerApi.getAllRoutes(),
+                customerApi.getMyBookings()
+            ]);
+
+            const busesWithRoutes = busesData.filter(bus => bus.route_id !== null);
+            setBuses(busesWithRoutes);
+            setRoutes(routesData);
+            setBookings(bookingsData);
+        } catch (error) {
+            setFeedback("Failed to load data");
+        }
     };
 
     const handleSelectBus = async (bus) => {
