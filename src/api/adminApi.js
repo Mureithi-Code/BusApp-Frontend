@@ -46,7 +46,7 @@ const adminApi = {
     },
 
     replyMessage: async (messageId, content) => {
-        return handleRequest(() => apiClient.post(`/admin/reply_message/${messageId}`, { content }));
+        return handleRequest(() => apiClient.post(`/admin/reply_to_message/${messageId}`, { content }));
     }
 };
 
