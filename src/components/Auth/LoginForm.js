@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import authApi from "../../api/authApi";
-import "./Auth.css";
+import "./Auth.css";  // This stays the same — updated CSS will handle the new styles.
 
 function LoginForm() {
     const [credentials, setCredentials] = useState({ email: "", password: "" });
@@ -14,28 +14,25 @@ function LoginForm() {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setMessage("");  // Clear previous messages
+        setMessage("");
         try {
             const response = await authApi.login(credentials);
             console.log("Login response:", response);
 
             setMessage("✅ Login successful!");
 
-            // Save token and role in localStorage
             localStorage.setItem("token", response.token);
             localStorage.setItem("role", response.role);
 
-            // Role-specific storage (Driver and Customer store IDs and names)
             if (response.role === "Driver") {
-                localStorage.setItem("driver_id", response.driver_id);   // ✅ Save driver_id
-                localStorage.setItem("driver_name", response.name);      // ✅ Optional for UI
+                localStorage.setItem("driver_id", response.driver_id);
+                localStorage.setItem("driver_name", response.name);
             } else if (response.role === "Customer") {
-                localStorage.setItem("customer_id", response.customer_id);  // ✅ Save customer_id
+                localStorage.setItem("customer_id", response.customer_id);
                 console.log("Stored customer_id:", localStorage.getItem("customer_id"));
-                localStorage.setItem("customer_name", response.name);      // ✅ Optional for UI
+                localStorage.setItem("customer_name", response.name);
             }
 
-            // Navigate based on role
             switch (response.role) {
                 case "Admin":
                     navigate("/admin-dashboard");
@@ -76,7 +73,11 @@ function LoginForm() {
                 />
                 <button type="submit">Login</button>
             </form>
-            {message && <p className={`auth-message ${message.startsWith("✅") ? "success" : "error"}`}>{message}</p>}
+            {message && (
+                <p className={`auth-message ${message.startsWith("✅") ? "success" : "error"}`}>
+                    {message}
+                </p>
+            )}
             <p>Don't have an account? <a href="/register">Register here</a></p>
         </div>
     );

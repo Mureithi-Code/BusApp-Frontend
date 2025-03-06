@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
+import { useNavigate } from "react-router-dom";
 import adminApi from "../../api/adminApi";
 import "./AdminDashboard.css";
+import { FaBars, FaTimes } from 'react-icons/fa';
 
 const AdminDashboard = () => {
     const [buses, setBuses] = useState([]);
@@ -10,6 +12,14 @@ const AdminDashboard = () => {
     const [selectedMessage, setSelectedMessage] = useState(null);
     const [replyContent, setReplyContent] = useState("");
     const [feedback, setFeedback] = useState("");
+    const [sidebarOpen, setSidebarOpen] = useState(false);
+
+    const navigate = useNavigate();
+
+    const busesRef = useRef(null);
+    const routesRef = useRef(null);
+    const driversRef = useRef(null);
+    const messagesRef = useRef(null);
 
     useEffect(() => {
         fetchData();
@@ -21,11 +31,6 @@ const AdminDashboard = () => {
             const fetchedRoutes = await adminApi.getAllRoutes();
             const fetchedDrivers = await adminApi.getAllDrivers();
             const fetchedMessages = await adminApi.getAllMessages();
-
-            console.log("Buses:", fetchedBuses);
-            console.log("Routes:", fetchedRoutes);
-            console.log("Drivers:", fetchedDrivers);
-            console.log("Messages:", fetchedMessages);
 
             setBuses(Array.isArray(fetchedBuses) ? fetchedBuses : []);
             setRoutes(Array.isArray(fetchedRoutes) ? fetchedRoutes : []);
@@ -76,26 +81,41 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleLogout = () => {
+        localStorage.clear();
+        navigate("/");
+    };
+
+    const scrollToSection = (ref) => {
+        ref.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+    };
+
     return (
         <div className="admin-dashboard">
-            {/* Sidebar Navigation */}
-            <aside className="sidebar">
-                <h2>Admin Panel</h2>
-                <ul>
-                    <li><a href="#buses">View Buses</a></li>
-                    <li><a href="#routes">View Routes</a></li>
-                    <li><a href="#drivers">Manage Drivers</a></li>
-                    <li><a href="#messages">View Messages</a></li>
-                </ul>
-            </aside>
+            <img src="https://images.pexels.com/photos/575897/pexels-photo-575897.jpeg?auto=compress&cs=tinysrgb&w=600" 
+                 alt="background" className="dashboard-background" />
 
-            <main className="content">
+            <div className={`sidebar ${sidebarOpen ? "open" : ""}`}>
+                <div className="sidebar-header">
+                    <h2>Admin Panel</h2>
+                    <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
+                        {sidebarOpen ? <FaTimes /> : <FaBars />}
+                    </button>
+                </div>
+                <nav className="sidebar-nav">
+                    <button onClick={() => scrollToSection(busesRef)}>View Buses</button>
+                    <button onClick={() => scrollToSection(routesRef)}>View Routes</button>
+                    <button onClick={() => scrollToSection(driversRef)}>Manage Drivers</button>
+                    <button onClick={() => scrollToSection(messagesRef)}>View Messages</button>
+                    <button onClick={handleLogout}>Logout</button>
+                </nav>
+            </div>
+
+            <div className="dashboard-content">
                 <h1>Admin Dashboard</h1>
-
                 {feedback && <div className="feedback">{feedback}</div>}
 
-                {/* Buses Section */}
-                <section id="buses">
+                <section ref={busesRef} id="buses">
                     <h2>All Buses (Assigned & Unassigned)</h2>
                     {buses.length === 0 ? (
                         <p>No buses available.</p>
@@ -105,9 +125,7 @@ const AdminDashboard = () => {
                                 <li key={bus.id}>
                                     <strong>Bus {bus.bus_number}</strong>
                                     <div>
-                                        {bus.route_id
-                                            ? `Assigned to Route ID ${bus.route_id}`
-                                            : "Unassigned (No Route)"}
+                                        {bus.route_id ? `Assigned to Route ID ${bus.route_id}` : "Unassigned (No Route)"}
                                     </div>
                                     <div>Ticket Price: ${bus.ticket_price}</div>
                                 </li>
@@ -116,8 +134,7 @@ const AdminDashboard = () => {
                     )}
                 </section>
 
-                {/* Routes Section */}
-                <section id="routes">
+                <section ref={routesRef} id="routes">
                     <h2>All Routes (With & Without Buses)</h2>
                     {routes.length === 0 ? (
                         <p>No routes available.</p>
@@ -127,9 +144,7 @@ const AdminDashboard = () => {
                                 <li key={route.id}>
                                     <strong>{route.start_location} ➡ {route.destination}</strong>
                                     <div>
-                                        {route.bus_id
-                                            ? `Bus ID ${route.bus_id} Assigned`
-                                            : "No Bus Assigned"}
+                                        {route.bus_id ? `Bus ID ${route.bus_id} Assigned` : "No Bus Assigned"}
                                     </div>
                                     <button onClick={() => handleCancelRoute(route.id)}>Cancel Route</button>
                                 </li>
@@ -138,8 +153,7 @@ const AdminDashboard = () => {
                     )}
                 </section>
 
-                {/* Drivers Section */}
-                <section id="drivers">
+                <section ref={driversRef} id="drivers">
                     <h2>Manage Drivers</h2>
                     {drivers.length === 0 ? (
                         <p>No drivers available.</p>
@@ -155,8 +169,7 @@ const AdminDashboard = () => {
                     )}
                 </section>
 
-                {/* Messages Section */}
-                <section id="messages">
+                <section ref={messagesRef} id="messages">
                     <h2>Customer Messages</h2>
                     {messages.length === 0 ? (
                         <p>No messages found.</p>
@@ -164,17 +177,14 @@ const AdminDashboard = () => {
                         <div className="messages-container">
                             <ul className="message-list">
                                 {messages.map(message => (
-                                    <li 
-                                        key={message.id} 
+                                    <li key={message.id}
                                         className={selectedMessage?.id === message.id ? "selected" : ""}
-                                        onClick={() => setSelectedMessage(message)}
-                                    >
+                                        onClick={() => setSelectedMessage(message)}>
                                         <strong>From User {message.sender_id}:</strong> {message.content}
                                     </li>
                                 ))}
                             </ul>
 
-                            {/* Reply Box */}
                             {selectedMessage && (
                                 <div className="reply-box">
                                     <h3>Reply to Message</h3>
@@ -190,7 +200,7 @@ const AdminDashboard = () => {
                         </div>
                     )}
                 </section>
-            </main>
+            </div>
         </div>
     );
 };

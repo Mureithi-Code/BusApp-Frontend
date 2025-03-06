@@ -9,7 +9,7 @@ function RegisterForm() {
         name: "",
         email: "",
         password: "",
-        role: "Customer"  // Default role 
+        role: "Customer"
     });
 
     const [message, setMessage] = useState("");
@@ -24,9 +24,7 @@ function RegisterForm() {
         try {
             const response = await authApi.register(formData);
             setMessage(response.message);
-
-            // Redirect to login after successful registration
-            setTimeout(() => navigate("/"), 2000);  // Redirect after showing message
+            setTimeout(() => navigate("/"), 2000);
         } catch (error) {
             setMessage(error.response?.data?.error || "Registration failed.");
         }
