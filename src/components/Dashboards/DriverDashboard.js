@@ -2,23 +2,22 @@ import React, { useState, useEffect } from "react";
 import driverApi from "../../api/driverApi";
 import { useNavigate } from "react-router-dom";
 import "./DriverDashboard.css";
-import { FaBars, FaTimes } from 'react-icons/fa';
+import { FaSignOutAlt } from 'react-icons/fa';
 
 function DriverDashboard() {
     const [routes, setRoutes] = useState([]);
     const [buses, setBuses] = useState([]);
     const [selectedBus, setSelectedBus] = useState(null);
     const [error, setError] = useState("");
-    const [sidebarOpen, setSidebarOpen] = useState(false);
     const navigate = useNavigate();
 
     const fetchDashboardData = async () => {
         try {
             const fetchedRoutes = await driverApi.getDriverRoutes();
-            setRoutes(fetchedRoutes);  
+            setRoutes(fetchedRoutes);
 
             const fetchedBuses = await driverApi.getDriverBuses();
-            setBuses(fetchedBuses);  
+            setBuses(fetchedBuses);
         } catch (err) {
             setError(err?.message || "Failed to fetch data");
         }
@@ -53,19 +52,18 @@ function DriverDashboard() {
         <div className="driver-dashboard">
 
             {/* Background Image */}
-            <img 
-                src="https://images.pexels.com/photos/20152874/pexels-photo-20152874/free-photo-of-red-bus-on-a-street-in-london.jpeg" 
-                alt="Background" 
-                className="dashboard-background" 
+            <img
+                src="https://images.pexels.com/photos/20152874/pexels-photo-20152874/free-photo-of-red-bus-on-a-street-in-london.jpeg"
+                alt="Background"
+                className="dashboard-background"
             />
 
             {/* Sidebar */}
-            <div className={`sidebar ${sidebarOpen ? 'open' : ''}`}>
-                <div className="sidebar-header">
+            <div className="sidebar">
+                <div className="sidebar-footer">
                     <h2>Driver Dashboard</h2>
-                    <button className="sidebar-toggle" onClick={() => setSidebarOpen(!sidebarOpen)}>
-                        {sidebarOpen ? <FaTimes /> : <FaBars />}
-                    </button>
+                    {/* Logout Icon in Header */}
+                    <FaSignOutAlt className="logout-icon" onClick={handleLogout} title="Logout" />
                 </div>
                 <nav className="sidebar-nav">
                     <button onClick={() => navigate("/driver/add-route")}>Add Route</button>
@@ -76,7 +74,6 @@ function DriverDashboard() {
                     <button onClick={() => navigate("/driver/view-bus-seats")}>View Bus Seats</button>
                     <button onClick={() => navigate("/driver/view-routes")}>View Routes</button>
                     <button onClick={() => navigate("/driver/view-buses")}>View Buses</button>
-                    <button onClick={handleLogout}>Logout</button>
                 </nav>
             </div>
 

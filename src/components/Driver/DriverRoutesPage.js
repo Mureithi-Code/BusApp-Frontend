@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import driverApi from "../../api/driverApi";
 import { useNavigate } from "react-router-dom";
+import { FaHome } from "react-icons/fa";
 import './DriverPages.css';
 
 const DriverRoutesPage = () => {
@@ -22,28 +23,42 @@ const DriverRoutesPage = () => {
     };
 
     return (
-        <div className="page-container">
-            <h2 className="page-header">My Routes</h2>
+        <div className="page-container driver-routes-page">
+            {/* Background Image */}
+            <img
+                src="https://images.pexels.com/photos/18355282/pexels-photo-18355282/free-photo-of-red-new-routemaster-bus-in-london.jpeg?auto=compress&cs=tinysrgb&w=600"
+                alt="Background"
+                className="page-background"
+            />
 
-            {feedback && <div className="feedback">{feedback}</div>}
+            {/* Back to Dashboard Icon */}
+            <FaHome
+                className="back-to-dashboard-icon"
+                title="Back to Dashboard"
+                onClick={() => navigate("/driver-dashboard")}
+            />
 
-            {routes.length === 0 ? (
-                <p>No routes available.</p>
-            ) : (
-                <ul className="route-list">
-                    {routes.map(route => (
-                        <li key={route.id}>
-                            <div>
-                                <strong>{route.start_location}</strong> ➡ <strong>{route.destination}</strong>
-                                <br />
-                                Departure Time: {route.departure_time || "Not Set"}
-                            </div>
-                        </li>
-                    ))}
-                </ul>
-            )}
+            <div className="form-container">
+                <h2 className="page-header">My Routes</h2>
 
-            <button onClick={() => navigate("/driver-dashboard")}>Back to Dashboard</button>
+                {feedback && <div className="feedback">{feedback}</div>}
+
+                {routes.length === 0 ? (
+                    <p>No routes available.</p>
+                ) : (
+                    <ul className="route-list">
+                        {routes.map(route => (
+                            <li key={route.id}>
+                                <div className="route-details">
+                                    <strong>{route.start_location}</strong> ➡ <strong>{route.destination}</strong>
+                                    <br />
+                                    Departure Time: {route.departure_time || "Not Set"}
+                                </div>
+                            </li>
+                        ))}
+                    </ul>
+                )}
+            </div>
         </div>
     );
 };

@@ -34,35 +34,45 @@ const SetDepartureTimePage = () => {
     };
 
     return (
-        <div className="page-container">
-            <h2 className="page-header">Set Departure Time</h2>
+        <div className="page-container set-departure-time-page">
+            {/* Background Image */}
+            <img
+                src="https://media.istockphoto.com/id/1433545168/photo/red-sand-running-through-bulbs-of-hourglass-on-december-calendar-countdown-to-christmas-and.jpg?s=1024x1024&w=is&k=20&c=XjIKBKPKsZ7Bask0OC4MPlOYKfziZf4_IHCjw7_tCTY="
+                alt="Background"
+                className="page-background"
+            />
 
-            {feedback && <div className={`feedback ${feedback.type}`}>{feedback.message}</div>}
+            <div className="form-container">
+                <h2 className="page-header">Set Departure Time</h2>
 
-            <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label>Select Bus (only buses with routes)</label>
-                    <select value={selectedBus} onChange={(e) => setSelectedBus(e.target.value)} required>
-                        <option value="">Select Bus</option>
-                        {buses.map(bus => (
-                            <option key={bus.id} value={bus.id}>
-                                {bus.bus_number} ({bus.start_location} ➡ {bus.destination})
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <div className="form-group">
-                    <label>Departure Time</label>
-                    <input
-                        type="datetime-local"
-                        value={departureTime}
-                        onChange={(e) => setDepartureTime(e.target.value)}
-                        required
-                    />
-                </div>
-                <button type="submit">Set Departure Time</button>
-            </form>
-            <button onClick={() => navigate("/driver-dashboard")}>Back to Dashboard</button>
+                {feedback && <div className={`feedback ${feedback.type}`}>{feedback.message}</div>}
+
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label>Select Bus (only buses with routes)</label>
+                        <select value={selectedBus} onChange={(e) => setSelectedBus(e.target.value)} required>
+                            <option value="">Select Bus</option>
+                            {buses.map(bus => (
+                                <option key={bus.id} value={bus.id}>
+                                    {bus.bus_number} ({bus.start_location} ➡ {bus.destination})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>Departure Time</label>
+                        <input
+                            type="datetime-local"
+                            value={departureTime}
+                            onChange={(e) => setDepartureTime(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <button type="submit">Set Departure Time</button>
+                </form>
+
+                <button className="back-button" onClick={() => navigate("/driver-dashboard")}>Back to Dashboard</button>
+            </div>
         </div>
     );
 };

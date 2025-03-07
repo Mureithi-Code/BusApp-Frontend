@@ -34,36 +34,46 @@ const SetTicketPricePage = () => {
     };
 
     return (
-        <div className="page-container">
-            <h2 className="page-header">Set Ticket Price</h2>
+        <div className="page-container set-ticket-price-page">
+            {/* Background Image */}
+            <img
+                src="https://images.pexels.com/photos/14820418/pexels-photo-14820418.jpeg?auto=compress&cs=tinysrgb&w=600"
+                alt="Background"
+                className="page-background"
+            />
 
-            {feedback && <div className={`feedback ${feedback.type}`}>{feedback.message}</div>}
+            <div className="form-container">
+                <h2 className="page-header">Set Ticket Price</h2>
 
-            <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label>Select Bus</label>
-                    <select value={selectedBus} onChange={(e) => setSelectedBus(e.target.value)} required>
-                        <option value="">Select Bus</option>
-                        {buses.map(bus => (
-                            <option key={bus.id} value={bus.id}>
-                                {bus.bus_number} (Current: ${bus.ticket_price})
-                            </option>
-                        ))}
-                    </select>
-                </div>
-                <div className="form-group">
-                    <label>New Ticket Price</label>
-                    <input
-                        type="number"
-                        step="0.01"
-                        value={ticketPrice}
-                        onChange={(e) => setTicketPrice(e.target.value)}
-                        required
-                    />
-                </div>
-                <button type="submit">Set Ticket Price</button>
-            </form>
-            <button onClick={() => navigate("/driver-dashboard")}>Back to Dashboard</button>
+                {feedback && <div className={`feedback ${feedback.type}`}>{feedback.message}</div>}
+
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label>Select Bus</label>
+                        <select value={selectedBus} onChange={(e) => setSelectedBus(e.target.value)} required>
+                            <option value="">Select Bus</option>
+                            {buses.map(bus => (
+                                <option key={bus.id} value={bus.id}>
+                                    {bus.bus_number} (Current: ${bus.ticket_price})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
+                    <div className="form-group">
+                        <label>New Ticket Price</label>
+                        <input
+                            type="number"
+                            step="0.01"
+                            value={ticketPrice}
+                            onChange={(e) => setTicketPrice(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <button type="submit">Set Ticket Price</button>
+                </form>
+
+                <button className="back-button" onClick={() => navigate("/driver-dashboard")}>Back to Dashboard</button>
+            </div>
         </div>
     );
 };

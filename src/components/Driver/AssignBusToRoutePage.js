@@ -37,42 +37,51 @@ const AssignBusToRoutePage = () => {
     };
 
     return (
-        <div className="page-container">
-            <h2 className="page-header">Assign Bus to Route</h2>
+        <div className="page-container assign-bus-page">
+            {/* Background Image */}
+            <img
+                src="https://media.istockphoto.com/id/1362859932/photo/blue-location-3d-icon-of-traffic-street-route-map-symbol-or-navigation-gps-pin-point-marker.jpg?s=1024x1024&w=is&k=20&c=dSO5mAOkpvM5HlSYxc2JIUn7gRvBm2NrNCf3tmIgeGs="
+                alt="Background"
+                className="page-background"
+            />
 
-            {feedback && (
-                <div className={`feedback ${feedback.type}`}>{feedback.message}</div>
-            )}
+            <div className="form-container">
+                <h2 className="page-header">Assign Bus to Route</h2>
 
-            <form onSubmit={handleSubmit}>
-                <div className="form-group">
-                    <label>Select Bus</label>
-                    <select value={selectedBus} onChange={(e) => setSelectedBus(e.target.value)} required>
-                        <option value="">Select Bus</option>
-                        {buses.map(bus => (
-                            <option key={bus.id} value={bus.id}>
-                                {bus.bus_number} (Seats: {bus.capacity})
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                {feedback && (
+                    <div className={`feedback ${feedback.type}`}>{feedback.message}</div>
+                )}
 
-                <div className="form-group">
-                    <label>Select Route</label>
-                    <select value={selectedRoute} onChange={(e) => setSelectedRoute(e.target.value)} required>
-                        <option value="">Select Route</option>
-                        {routes.map(route => (
-                            <option key={route.id} value={route.id}>
-                                {route.start_location} ➡ {route.destination}
-                            </option>
-                        ))}
-                    </select>
-                </div>
+                <form onSubmit={handleSubmit}>
+                    <div className="form-group">
+                        <label>Select Bus</label>
+                        <select value={selectedBus} onChange={(e) => setSelectedBus(e.target.value)} required>
+                            <option value="">Select Bus</option>
+                            {buses.map(bus => (
+                                <option key={bus.id} value={bus.id}>
+                                    {bus.bus_number} (Seats: {bus.capacity})
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-                <button type="submit">Assign Bus to Route</button>
-            </form>
+                    <div className="form-group">
+                        <label>Select Route</label>
+                        <select value={selectedRoute} onChange={(e) => setSelectedRoute(e.target.value)} required>
+                            <option value="">Select Route</option>
+                            {routes.map(route => (
+                                <option key={route.id} value={route.id}>
+                                    {route.start_location} ➡ {route.destination}
+                                </option>
+                            ))}
+                        </select>
+                    </div>
 
-            <button onClick={() => navigate("/driver-dashboard")}>Back to Dashboard</button>
+                    <button type="submit">Assign Bus to Route</button>
+                </form>
+
+                <button className="back-button" onClick={() => navigate("/driver-dashboard")}>Back to Dashboard</button>
+            </div>
         </div>
     );
 };
